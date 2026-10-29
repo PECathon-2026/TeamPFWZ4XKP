@@ -59,3 +59,4 @@ captureLandingPage().catch(err => {
   console.error("Error capturing landing page:", err);
   process.exit(1);
 });
+
