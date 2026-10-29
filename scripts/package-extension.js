@@ -79,3 +79,4 @@ if (fs.existsSync(zipPath)) {
   console.error("Packaging failed: zip archive was not generated.");
   process.exit(1);
 }
+
