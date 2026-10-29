@@ -42,3 +42,4 @@ async function captureNavbarDemo() {
 }
 
 captureNavbarDemo().catch(console.error);
+

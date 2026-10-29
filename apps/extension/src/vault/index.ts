@@ -149,4 +149,28 @@ export class SecretVault {
   isUnlocked(): boolean {
     return this.activeKey !== null;
   }
+
+  /**
+   * Loads previously persisted encrypted secrets (safe: no plaintext).
+   * Call this on service-worker startup to restore vault contents from chrome.storage.local.
+   */
+  loadStoredSecrets(data: StoredSecret[]): void {
+    this.secrets.clear();
+    for (const s of data) {
+      this.secrets.set(s.name, s);
+    }
+  }
+
+  /**
+   * Returns all stored secrets (ciphertext + metadata only, never plaintext).
+   * Safe to persist to chrome.storage.local.
+   */
+  getStoredSecrets(): StoredSecret[] {
+    return Array.from(this.secrets.values());
+  }
+
+  removeSecret(name: string): void {
+    this.secrets.delete(name);
+    this.plaintextCache.delete(name);
+  }
 }

@@ -348,6 +348,82 @@
       .nv-ico svg, .nv-ico::before, .nv-ico::after, .nv-door { animation: none!important; transition: none; }
     }
 
+    /* ==========================================================================
+       INK ORBIT FEATURES STYLES ("Hatched Bento")
+       ========================================================================== */
+    .ib-root {
+      --ib-w: #0e0f12;
+      --ib-ink: #f2f3f5;
+      --ib-muted: #9da1a8;
+      --ib-line: #26282e;
+      --ib-line-strong: #3b3e47;
+      --ib-bg: #090a0c;
+      --ib-card: #0b1120;
+      --ib-raise: #111827;
+      --ib-accent: #38bdf8;
+      --ib-shadow: 0 18px 40px -16px rgba(0,0,0,.65), 0 6px 16px -6px rgba(0,0,0,.5);
+      --ib-pattern: rgba(255,255,255,.045);
+      color: var(--ib-ink);
+      margin: 40px 0 60px 0;
+    }
+    .ib-shell { width: 100%; position: relative; }
+    .ib-sec { container-type: inline-size; }
+    .ib-reveal { opacity: 1; transform: none; }
+    .ib-head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; margin-bottom: 32px; }
+    .ib-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ib-muted); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--ib-line); background: var(--ib-card); }
+    .ib-tag::before { content: ""; width: 5px; height: 5px; border-radius: 999px; background: #38bdf8; display: inline-block; }
+    .ib-h2 { font-size: clamp(26px, 4cqw, 38px); font-weight: 700; letter-spacing: -.03em; line-height: 1.15; color: var(--ib-ink); margin: 0; }
+    .ib-h2 span { display: block; }
+    .ib-h2 .ib-muted { color: var(--ib-muted); }
+    .ib-frame { position: relative; }
+    .ib-c { position: absolute; width: 12px; height: 12px; border-style: solid; border-color: var(--ib-line-strong); pointer-events: none; transition: border-color .3s, transform .3s cubic-bezier(.2,.8,.2,1); z-index: 2; }
+    .ib-c-tl { top: -6px; left: -6px; border-top-width: 1.5px; border-left-width: 1.5px; }
+    .ib-c-tr { top: -6px; right: -6px; border-top-width: 1.5px; border-right-width: 1.5px; }
+    .ib-c-bl { bottom: -6px; left: -6px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+    .ib-c-br { bottom: -6px; right: -6px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+    .ib-frame-hover:hover > .ib-c { border-color: #38bdf8; }
+    .ib-frame-hover:hover > .ib-c-tl { transform: translate(-3px,-3px); }
+    .ib-frame-hover:hover > .ib-c-tr { transform: translate(3px,-3px); }
+    .ib-frame-hover:hover > .ib-c-bl { transform: translate(-3px,3px); }
+    .ib-frame-hover:hover > .ib-c-br { transform: translate(3px,3px); }
+    .ib-bento { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+    @media (min-width: 768px) {
+      .ib-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .ib-wide { grid-column: 1 / -1; width: min(100%, 860px); justify-self: center; }
+    }
+    .ib-card { background: linear-gradient(180deg, var(--ib-raise), var(--ib-card)); border: 1px solid var(--ib-line); padding: clamp(16px, 2cqw, 24px); display: flex; flex-direction: column; gap: 14px; transition: border-color .3s, box-shadow .35s; border-radius: 8px; }
+    .ib-card:hover { border-color: rgba(56, 189, 248, 0.4); box-shadow: var(--ib-shadow); }
+    .ib-card h3 { font-size: 14px; font-weight: 600; letter-spacing: -.005em; color: #f8fafc; }
+    .ib-card p { font-size: 13px; line-height: 1.55; color: var(--ib-muted); max-width: 44ch; }
+    .ib-diagram { width: 100%; height: auto; overflow: visible; }
+    .ib-wide-copy { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 10px; }
+    @media (min-width: 560px) {
+      .ib-wide-copy { grid-template-columns: 1fr 1fr; }
+      .ib-wide-copy > div:last-child { justify-self: end; text-align: left; }
+    }
+    .ib-flow { stroke: var(--ib-line-strong); fill: none; stroke-width: 1.2; transition: stroke .3s; }
+    .ib-flow-on { stroke: #38bdf8; }
+    .ib-dash { stroke-dasharray: 3 4; animation: ib-dash 1.2s linear infinite; }
+    .ib-node { fill: var(--ib-raise); stroke: var(--ib-line-strong); transition: stroke .3s, transform .3s; }
+    .ib-av { cursor: pointer; transition: transform .35s cubic-bezier(.2,.8,.2,1); transform-box: fill-box; transform-origin: center; }
+    .ib-av:hover { transform: scale(1.15); }
+    .ib-av-tip { opacity: 0; transition: opacity .2s; pointer-events: none; }
+    .ib-av:hover .ib-av-tip { opacity: 1; }
+    .ib-presence { animation: ib-pulse 2.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+    .ib-sheet { transition: transform .7s cubic-bezier(.2,.8,.2,1), opacity .7s; }
+    .ib-sheet-new { animation: ib-sheet-in .7s cubic-bezier(.2,.8,.2,1) both; }
+    .ib-tool { cursor: pointer; transition: transform .3s cubic-bezier(.2,.8,.2,1); transform-box: fill-box; transform-origin: center; }
+    .ib-tool:hover, .ib-tool-on { transform: translateY(-2px); }
+    .ib-tool rect { transition: stroke .3s; }
+    .ib-tool-on rect.ib-node { stroke: #38bdf8; }
+    .ib-chart { cursor: crosshair; }
+    .ib-line-draw { stroke-dasharray: 1000; stroke-dashoffset: 0; transition: stroke-dashoffset 1.8s cubic-bezier(.4,.1,.2,1); }
+    @keyframes ib-dash { to { stroke-dashoffset: -14; } }
+    @keyframes ib-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(1.35); } }
+    @keyframes ib-sheet-in { from { opacity: 0; transform: translate(14px, -10px) rotate(4deg); } to { opacity: 1; transform: none; } }
+    .ib-bento > .ib-frame { display: flex; flex-direction: column; }
+    .ib-bento > .ib-frame > .ib-card { flex: 1; }
+
     /* Buttons */
     .nav-actions {
       display: flex;
@@ -1088,8 +1164,17 @@
           <span class="nimbus-label">Pipeline</span>
         </a>
 
-        <a class="nimbus-item" href="#architecture" data-fx="plane" data-idx="2">
+        <a class="nimbus-item" href="#features" data-fx="plane" data-idx="2">
           <span class="nv-ico" data-fx="plane">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </span>
+          <span class="nimbus-label">Features</span>
+        </a>
+
+        <a class="nimbus-item" href="#architecture" data-fx="glow" data-idx="3">
+          <span class="nv-ico" data-fx="glow">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
@@ -1097,7 +1182,7 @@
           <span class="nimbus-label">Defense</span>
         </a>
 
-        <a class="nimbus-item" href="#scenarios" data-fx="drop" data-idx="3">
+        <a class="nimbus-item" href="#scenarios" data-fx="drop" data-idx="4">
           <span class="nv-ico" data-fx="drop">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M12 3.5s6 6.4 6 10.6a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5Z"/>
@@ -1106,7 +1191,7 @@
           <span class="nimbus-label">5 Scenarios</span>
         </a>
 
-        <a class="nimbus-item" href="/hub" data-fx="wave" data-idx="4">
+        <a class="nimbus-item" href="/hub" data-fx="wave" data-idx="5">
           <span class="nv-ico" data-fx="wave">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
@@ -1115,7 +1200,7 @@
           <span class="nimbus-label">Hub</span>
         </a>
 
-        <a class="nimbus-item" href="#faq" data-fx="pop" data-idx="5">
+        <a class="nimbus-item" href="#faq" data-fx="pop" data-idx="6">
           <span class="nv-ico" data-fx="pop">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
@@ -1313,6 +1398,237 @@
           <h3>Global Reasoning</h3>
           <p>Cloud LLMs (Claude, OpenAI) receive structured, tokenized DOM envelopes with zero raw secrets, returning safe execution steps.</p>
           <span class="pipeline-zone zone-2">ZONE 2: CLOUD AGENT</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- INK ORBIT FEATURES BENTO (Hatched Bento Layout) -->
+    <section id="features" class="container ib-root" data-theme="dark">
+      <div class="ib-shell">
+        <div class="ib-sec">
+          <div class="ib-reveal" data-in="true">
+            
+            <div class="ib-head">
+              <span class="ib-tag">Zero-Knowledge Automation</span>
+              <h2 class="ib-h2">
+                <span>Cryptographic <span class="ib-muted">Privacy</span></span>
+                <span>For Autonomous Agents</span>
+              </h2>
+            </div>
+
+            <div class="ib-bento">
+
+              <!-- Card 1 (Wide): Live Flow Diagram & Auto-Generated Reports Stack -->
+              <div class="ib-frame ib-wide ib-frame-hover">
+                <span class="ib-c ib-c-tl" aria-hidden="true"></span>
+                <span class="ib-c ib-c-tr" aria-hidden="true"></span>
+                <span class="ib-c ib-c-bl" aria-hidden="true"></span>
+                <span class="ib-c ib-c-br" aria-hidden="true"></span>
+
+                <div class="ib-card">
+                  <!-- SVG Flow Diagram -->
+                  <svg class="ib-diagram" viewBox="0 0 540 160" aria-label="PrivacyLens Data Flow Diagram">
+                    <defs>
+                      <linearGradient id="landing-ib-rays" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25"/>
+                        <stop offset="100%" stop-color="#10b981" stop-opacity="0.25"/>
+                      </linearGradient>
+                      <pattern id="landing-ib-hatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                        <line x1="0" y1="0" x2="0" y2="8" stroke="currentColor" stroke-width="0.7" opacity="0.12"/>
+                      </pattern>
+                    </defs>
+
+                    <!-- Background Hatch Pattern -->
+                    <rect x="0" y="0" width="540" height="160" fill="url(#landing-ib-hatch)"/>
+
+                    <!-- Flow lines -->
+                    <path d="M 120 70 C 180 70, 200 95, 250 95" class="ib-flow ib-flow-on ib-dash" stroke-width="1.4"/>
+                    <path d="M 120 90 C 180 90, 200 115, 250 115" class="ib-flow ib-dash" stroke-width="1.2"/>
+                    <path d="M 370 95 C 400 95, 410 80, 440 80" class="ib-flow ib-flow-on ib-dash" stroke-width="1.4"/>
+                    <path d="M 370 115 C 400 115, 410 130, 440 130" class="ib-flow ib-dash" stroke-width="1.2"/>
+
+                    <!-- Host Page DOM Nodes (Left) -->
+                    <g transform="translate(18, 20)">
+                      <g class="ib-av" transform="translate(45, 15)">
+                        <circle cx="16" cy="16" r="14" class="ib-node"/>
+                        <text x="16" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">CC</text>
+                        <circle cx="26" cy="6" r="4" fill="#ef4444" class="ib-presence"/>
+                        <g class="ib-av-tip">
+                          <rect x="-30" y="-22" width="90" height="18" rx="4" fill="#0f172a" stroke="rgba(255,255,255,0.2)"/>
+                          <text x="15" y="-10" font-size="9" fill="#f8fafc" text-anchor="middle">Luhn Scrubbed</text>
+                        </g>
+                      </g>
+                      <g class="ib-av" transform="translate(85, 30)">
+                        <circle cx="16" cy="16" r="14" class="ib-node"/>
+                        <text x="16" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">ID</text>
+                        <circle cx="26" cy="6" r="4" fill="#f59e0b" class="ib-presence"/>
+                        <g class="ib-av-tip">
+                          <rect x="-30" y="-22" width="90" height="18" rx="4" fill="#0f172a" stroke="rgba(255,255,255,0.2)"/>
+                          <text x="15" y="-10" font-size="9" fill="#f8fafc" text-anchor="middle">Verhoeff Match</text>
+                        </g>
+                      </g>
+                      <g class="ib-av" transform="translate(25, 75)">
+                        <circle cx="16" cy="16" r="14" class="ib-node"/>
+                        <text x="16" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">KEY</text>
+                        <circle cx="26" cy="6" r="4" fill="#10b981" class="ib-presence"/>
+                        <g class="ib-av-tip">
+                          <rect x="-30" y="-22" width="90" height="18" rx="4" fill="#0f172a" stroke="rgba(255,255,255,0.2)"/>
+                          <text x="15" y="-10" font-size="9" fill="#f8fafc" text-anchor="middle">Shannon Entropy</text>
+                        </g>
+                      </g>
+                      <g class="ib-av" transform="translate(80, 85)">
+                        <circle cx="16" cy="16" r="14" class="ib-node"/>
+                        <text x="16" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">DOM</text>
+                        <circle cx="26" cy="6" r="4" fill="#38bdf8" class="ib-presence"/>
+                        <g class="ib-av-tip">
+                          <rect x="-30" y="-22" width="90" height="18" rx="4" fill="#0f172a" stroke="rgba(255,255,255,0.2)"/>
+                          <text x="15" y="-10" font-size="9" fill="#f8fafc" text-anchor="middle">Allowlist Walker</text>
+                        </g>
+                      </g>
+                    </g>
+
+                    <!-- Central Hub Chip -->
+                    <g transform="translate(235, 72)">
+                      <rect x="0" y="0" width="130" height="58" rx="8" class="ib-node" stroke="#38bdf8" stroke-width="1.5"/>
+                      <rect x="4" y="4" width="122" height="50" rx="6" fill="url(#landing-ib-rays)"/>
+                      <text x="65" y="26" font-size="11" font-weight="800" letter-spacing="1.5" fill="#38bdf8" text-anchor="middle">PRIVACYLENS</text>
+                      <text x="65" y="44" font-size="9.5" font-family="'JetBrains Mono', monospace" fill="currentColor" opacity="0.8" text-anchor="middle">AES-GCM-256 VAULT</text>
+                    </g>
+
+                    <!-- Live Printing Report Stack (Right) -->
+                    <g transform="translate(425, 45)">
+                      <g transform="translate(10, 10) rotate(-4)">
+                        <rect width="64" height="76" rx="4" class="ib-node" fill="#0b1120" stroke="rgba(255,255,255,0.15)"/>
+                      </g>
+                      <g transform="translate(5, 5) rotate(2)">
+                        <rect width="64" height="76" rx="4" class="ib-node" fill="#0f172a" stroke="rgba(255,255,255,0.25)"/>
+                      </g>
+                      <g id="landing-top-sheet" class="ib-sheet ib-sheet-new">
+                        <rect width="64" height="76" rx="4" class="ib-node" stroke="#38bdf8" stroke-width="1.2"/>
+                        <line x1="10" y1="14" x2="42" y2="14" stroke="#38bdf8" stroke-width="2"/>
+                        <line x1="10" y1="24" x2="54" y2="24" stroke="currentColor" opacity="0.4" stroke-width="1.5"/>
+                        <line x1="10" y1="32" x2="48" y2="32" stroke="currentColor" opacity="0.4" stroke-width="1.5"/>
+                        <line x1="10" y1="40" x2="52" y2="40" stroke="currentColor" opacity="0.4" stroke-width="1.5"/>
+                        <circle cx="48" cy="58" r="7" fill="#10b981"/>
+                        <path d="M45 58 L47 60 L51 55" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+                      </g>
+                    </g>
+                  </svg>
+
+                  <!-- Card Copy -->
+                  <div class="ib-wide-copy">
+                    <div>
+                      <h3>Real-Time Redaction Engine</h3>
+                      <p>Browser-local AST parsing intercepts sensitive tokens before they leave DOM memory, substituting deterministic vault hashes in real time.</p>
+                    </div>
+                    <div>
+                      <h3>Zero-Leakage Audit Stack</h3>
+                      <p>Cryptographic attestations stream to the local audit ledger on each execution step: <span id="landing-report-count" style="font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8">148</span> verified proofs generated.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2: Integrations Hub -->
+              <div class="ib-frame ib-frame-hover">
+                <span class="ib-c ib-c-tl" aria-hidden="true"></span>
+                <span class="ib-c ib-c-tr" aria-hidden="true"></span>
+                <span class="ib-c ib-c-bl" aria-hidden="true"></span>
+                <span class="ib-c ib-c-br" aria-hidden="true"></span>
+
+                <div class="ib-card">
+                  <!-- SVG Integrations Hub Diagram -->
+                  <svg class="ib-diagram" viewBox="0 0 280 130" aria-label="Integrations Hub Diagram">
+                    <g transform="translate(15, 20)">
+                      <g class="ib-tool ib-tool-on" id="landing-tool-0" onclick="landingSelectTool(0)" transform="translate(0, 0)">
+                        <rect width="52" height="42" rx="6" class="ib-node" stroke="#38bdf8" stroke-width="1.5"/>
+                        <text x="26" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">Claude</text>
+                        <text x="26" y="32" font-size="8" fill="#38bdf8" text-anchor="middle">ACTIVE</text>
+                      </g>
+                      <g class="ib-tool" id="landing-tool-1" onclick="landingSelectTool(1)" transform="translate(62, 0)">
+                        <rect width="52" height="42" rx="6" class="ib-node"/>
+                        <text x="26" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">GPT-4o</text>
+                        <text x="26" y="32" font-size="8" fill="currentColor" opacity="0.6" text-anchor="middle">READY</text>
+                      </g>
+                      <g class="ib-tool" id="landing-tool-2" onclick="landingSelectTool(2)" transform="translate(124, 0)">
+                        <rect width="52" height="42" rx="6" class="ib-node"/>
+                        <text x="26" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">Ollama</text>
+                        <text x="26" y="32" font-size="8" fill="currentColor" opacity="0.6" text-anchor="middle">LOCAL</text>
+                      </g>
+                      <g class="ib-tool" id="landing-tool-3" onclick="landingSelectTool(3)" transform="translate(186, 0)">
+                        <rect width="52" height="42" rx="6" class="ib-node"/>
+                        <text x="26" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">Ext MV3</text>
+                        <text x="26" y="32" font-size="8" fill="currentColor" opacity="0.6" text-anchor="middle">GATE</text>
+                      </g>
+                    </g>
+
+                    <path d="M 40 64 L 140 100" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3 3" class="ib-dash" id="landing-sync-beam"/>
+                    
+                    <g transform="translate(90, 90)">
+                      <rect width="100" height="26" rx="13" class="ib-node" fill="#0b1120" stroke="#10b981"/>
+                      <circle cx="14" cy="13" r="3.5" fill="#10b981" class="ib-presence"/>
+                      <text x="56" y="17" font-size="9.5" font-weight="600" fill="#10b981" text-anchor="middle" id="landing-tool-status">Syncing Claude</text>
+                    </g>
+                  </svg>
+
+                  <div>
+                    <h3>Integrations Hub</h3>
+                    <p>Connect your automation frameworks — Playwright, Puppeteer, Claude Code, or browser extensions — into one zero-leakage proxy plane.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 3: Scrubbable Predictive Forecast Chart -->
+              <div class="ib-frame ib-frame-hover">
+                <span class="ib-c ib-c-tl" aria-hidden="true"></span>
+                <span class="ib-c ib-c-tr" aria-hidden="true"></span>
+                <span class="ib-c ib-c-bl" aria-hidden="true"></span>
+                <span class="ib-c ib-c-br" aria-hidden="true"></span>
+
+                <div class="ib-card">
+                  <!-- SVG Chart with hover scrub -->
+                  <svg class="ib-diagram ib-chart" id="landing-forecast-svg" viewBox="0 0 280 130" aria-label="Leakage Defense & Confidence Chart" onpointermove="landingScrubChart(event)" onpointerleave="landingResetChart()">
+                    <defs>
+                      <linearGradient id="landing-chart-area-grad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/>
+                        <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0"/>
+                      </linearGradient>
+                    </defs>
+
+                    <!-- Grid lines -->
+                    <line x1="20" y1="20" x2="260" y2="20" stroke="currentColor" opacity="0.08" stroke-dasharray="2 4"/>
+                    <line x1="20" y1="55" x2="260" y2="55" stroke="currentColor" opacity="0.08" stroke-dasharray="2 4"/>
+                    <line x1="20" y1="90" x2="260" y2="90" stroke="currentColor" opacity="0.08" stroke-dasharray="2 4"/>
+
+                    <!-- Chart Area Fill -->
+                    <path id="landing-chart-area-path" d="" fill="url(#landing-chart-area-grad)"/>
+
+                    <!-- Chart Line -->
+                    <path id="landing-chart-line-path" d="" fill="none" stroke="#38bdf8" stroke-width="2" class="ib-line-draw"/>
+
+                    <!-- Forecast Split Guideline (at index 8) -->
+                    <line x1="175" y1="15" x2="175" y2="110" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 3"/>
+                    <text x="178" y="24" font-size="8" fill="#f59e0b" font-weight="600">FORECAST</text>
+
+                    <!-- Scrub Indicator Dot & Tooltip -->
+                    <g id="landing-chart-scrub-group" transform="translate(175, 45)">
+                      <line x1="0" y1="-30" x2="0" y2="65" stroke="currentColor" opacity="0.4" stroke-width="1"/>
+                      <circle cx="0" cy="0" r="5" fill="#38bdf8" stroke="#fff" stroke-width="2"/>
+                      <rect x="-24" y="-22" width="48" height="16" rx="4" fill="#0f172a" stroke="#38bdf8"/>
+                      <text id="landing-chart-scrub-val" x="0" y="-11" font-size="9" font-family="'JetBrains Mono', monospace" font-weight="700" fill="#38bdf8" text-anchor="middle">99.8%</text>
+                    </g>
+                  </svg>
+
+                  <div>
+                    <h3>Predictive Redaction Confidence</h3>
+                    <p>Tripwire AI projects leakage prevention thresholds in real time across multi-step agent actions with 99.8% confidence.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
         </div>
       </div>
     </section>
@@ -2090,6 +2406,117 @@ void main(){
     // Initial trigger
     input.value = "Alice (alice.customer@example.com, +91 9876543210) purchased items with Visa 4111-1111-1111-1111 exp 08/29 cvv 849";
     output.innerHTML = sanitizeText(input.value);
+
+    /* ---------- Ink Orbit Features Bento Logic ---------- */
+    // 1. Auto-increment reports count
+    let landingReportsCount = 148;
+    setInterval(() => {
+      landingReportsCount++;
+      const el = document.getElementById("landing-report-count");
+      if (el) el.textContent = landingReportsCount;
+      const sheet = document.getElementById("landing-top-sheet");
+      if (sheet) {
+        sheet.classList.remove("ib-sheet-new");
+        void sheet.offsetWidth;
+        sheet.classList.add("ib-sheet-new");
+      }
+    }, 2800);
+
+    // 2. Integrations tool selector
+    const landingTools = [
+      { name: "Claude", status: "Syncing Claude", x: 40 },
+      { name: "GPT-4o", status: "Syncing GPT-4o", x: 102 },
+      { name: "Ollama", status: "Syncing Ollama", x: 164 },
+      { name: "Chrome", status: "Syncing Extension", x: 226 },
+    ];
+    function landingSelectTool(idx) {
+      for (let i = 0; i < 4; i++) {
+        const t = document.getElementById("landing-tool-" + i);
+        if (t) {
+          if (i === idx) {
+            t.classList.add("ib-tool-on");
+            t.querySelector("rect").setAttribute("stroke", "#38bdf8");
+            t.querySelector("rect").setAttribute("stroke-width", "1.5");
+          } else {
+            t.classList.remove("ib-tool-on");
+            t.querySelector("rect").removeAttribute("stroke");
+          }
+        }
+      }
+      const syncStatus = document.getElementById("landing-tool-status");
+      if (syncStatus) syncStatus.textContent = landingTools[idx].status;
+      const beam = document.getElementById("landing-sync-beam");
+      if (beam) {
+        beam.setAttribute("d", "M " + landingTools[idx].x + " 64 L 140 100");
+      }
+    }
+
+    // 3. Predictive chart scrub logic
+    const lChartVals = [35, 42, 40, 52, 48, 62, 58, 70, 68, 80, 88, 98];
+    const lPad = 24;
+    const lChartW = 280;
+    const lChartH = 130;
+    const lN = lChartVals.length;
+    const lLo = Math.min(...lChartVals);
+    const lHi = Math.max(...lChartVals);
+    const lSpan = lHi - lLo || 1;
+
+    const lPts = lChartVals.map((v, i) => [
+      lPad + (i / (lN - 1)) * (lChartW - lPad * 2),
+      lChartH - lPad - ((v - lLo) / lSpan) * (lChartH - lPad * 2)
+    ]);
+
+    let lLinePath = "";
+    lPts.forEach(([x, y], i) => {
+      if (i === 0) {
+        lLinePath = "M " + x.toFixed(1) + " " + y.toFixed(1);
+      } else {
+        const [px, py] = lPts[i - 1];
+        const cx = (px + x) / 2;
+        lLinePath += " C " + cx.toFixed(1) + " " + py.toFixed(1) + " " + cx.toFixed(1) + " " + y.toFixed(1) + " " + x.toFixed(1) + " " + y.toFixed(1);
+      }
+    });
+
+    const lAreaPath = lLinePath + " L " + lPts[lN - 1][0].toFixed(1) + " " + (lChartH - lPad) + " L " + lPts[0][0].toFixed(1) + " " + (lChartH - lPad) + " Z";
+
+    const lLineEl = document.getElementById("landing-chart-line-path");
+    const lAreaEl = document.getElementById("landing-chart-area-path");
+    if (lLineEl) lLineEl.setAttribute("d", lLinePath);
+    if (lAreaEl) lAreaEl.setAttribute("d", lAreaPath);
+
+    function landingScrubChart(e) {
+      const svg = document.getElementById("landing-forecast-svg");
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
+      const clientX = e.clientX - rect.left;
+      const svgX = (clientX / rect.width) * lChartW;
+
+      let bestIdx = 0;
+      let minD = Infinity;
+      lPts.forEach(([px], i) => {
+        const d = Math.abs(px - svgX);
+        if (d < minD) {
+          minD = d;
+          bestIdx = i;
+        }
+      });
+
+      const [px, py] = lPts[bestIdx];
+      const scrubGroup = document.getElementById("landing-chart-scrub-group");
+      if (scrubGroup) scrubGroup.setAttribute("transform", "translate(" + px.toFixed(1) + ", " + py.toFixed(1) + ")");
+      const scrubVal = document.getElementById("landing-chart-scrub-val");
+      if (scrubVal) scrubVal.textContent = (lChartVals[bestIdx] + 0.5).toFixed(1) + "%";
+    }
+
+    function landingResetChart() {
+      const defaultIdx = 8;
+      const [px, py] = lPts[defaultIdx];
+      const scrubGroup = document.getElementById("landing-chart-scrub-group");
+      if (scrubGroup) scrubGroup.setAttribute("transform", "translate(" + px.toFixed(1) + ", " + py.toFixed(1) + ")");
+      const scrubVal = document.getElementById("landing-chart-scrub-val");
+      if (scrubVal) scrubVal.textContent = (lChartVals[defaultIdx] + 0.5).toFixed(1) + "%";
+    }
+    landingResetChart();
   </script>
 </body>
 </html>

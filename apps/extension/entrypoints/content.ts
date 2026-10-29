@@ -66,6 +66,18 @@ function buildDOMSnapshot(element: HTMLElement, idCounter = { val: 0 }): DOMNode
       attributes["value"] = liveValue;
     }
   }
+  // For select elements, read the live selected value
+  if (tagName === "select") {
+    const liveValue = (element as HTMLSelectElement).value;
+    if (liveValue) {
+      attributes["value"] = liveValue;
+    }
+    // Also capture the selected option's text
+    const selectedOption = (element as HTMLSelectElement).selectedOptions[0];
+    if (selectedOption?.text) {
+      attributes["title"] = selectedOption.text;
+    }
+  }
 
   // Check interactive
   const isInteractive =

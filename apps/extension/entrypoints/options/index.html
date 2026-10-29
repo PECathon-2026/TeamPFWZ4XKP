@@ -85,8 +85,8 @@
 
     <div class="nav-tabs">
       <button class="tab-btn active" data-tab="tab-gateway">Gateway & Provider</button>
-      <button class="tab-btn" data-tab="tab-rules">Custom Privacy Rules (FR-D7)</button>
-      <button class="tab-btn" data-tab="tab-vault">Client Vault (FR-C3)</button>
+      <button class="tab-btn" data-tab="tab-rules">Custom Privacy Rules</button>
+      <button class="tab-btn" data-tab="tab-vault">Secret Vault</button>
       <button class="tab-btn" data-tab="tab-backup">Backup & Export</button>
     </div>
 
@@ -117,7 +117,7 @@
           </div>
           <div class="form-group">
             <label for="auth-token">Bearer Auth Token</label>
-            <input type="password" id="auth-token" value="dev_privacylens_token_001" placeholder="dev_privacylens_token_... ">
+            <input type="password" id="auth-token" value="" placeholder="dev_privacylens_token_... ">
           </div>
         </div>
 
@@ -132,7 +132,7 @@
     <!-- TAB 2: CUSTOM PRIVACY RULES -->
     <div id="tab-rules" class="tab-pane">
       <div class="card">
-        <div class="card-title">➕ Add Custom Privacy Rule (FR-D7)</div>
+        <div class="card-title">➕ Add Custom Privacy Rule</div>
         <div class="card-subtitle">Define user-specific patterns, internal IDs, or CSS selectors that must never leave your machine.</div>
 
         <div class="form-grid">
@@ -207,7 +207,7 @@
     <!-- TAB 3: CLIENT-SIDE VAULT -->
     <div id="tab-vault" class="tab-pane">
       <div class="card">
-        <div class="card-title">🔐 Client-Side Cryptographic Vault (FR-C3)</div>
+        <div class="card-title">🔐 Secret Vault (AES-256)</div>
         <div class="card-subtitle">AES-256-GCM + PBKDF2 local secret store. Secrets never leave your browser in plaintext.</div>
 
         <div class="form-grid">

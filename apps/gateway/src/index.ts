@@ -79,6 +79,20 @@ if (isDev) {
     return c.text("Navbar demo page not found", 404);
   });
 
+  // Ink Orbit Features Dedicated Demo Page
+  app.get("/features", (c) => {
+    const candidates = [
+      path.resolve(process.cwd(), "eval/demo-features.html"),
+      path.resolve(process.cwd(), "../../eval/demo-features.html"),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return c.html(fs.readFileSync(p, "utf-8"));
+      }
+    }
+    return c.text("Features demo page not found", 404);
+  });
+
   // Scenario S2: Auth & OTP Page
   app.get("/auth", (c) => {
     const candidates = [

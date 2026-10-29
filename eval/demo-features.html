@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ink Orbit Features — Interactive Demo & Component Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* Reset & Base */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body[data-page-theme="dark"] {
+      background: #030712;
+      color: #F8FAFC;
+    }
+
+    body[data-page-theme="light"] {
+      background: #F8FAFC;
+      color: #0F172A;
+    }
+
+    /* Top Control Bar */
+    .control-bar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(3, 7, 18, 0.85);
+    }
+    body[data-page-theme="light"] .control-bar {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      background: rgba(248, 250, 252, 0.85);
+    }
+
+    .brand-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .badge {
+      font-size: 11px;
+      font-family: "JetBrains Mono", monospace;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+    }
+
+    .theme-toggle-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 4px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    body[data-page-theme="light"] .theme-toggle-group {
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .theme-btn {
+      background: none;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #94a3b8;
+      transition: all 0.2s;
+    }
+    .theme-btn.active {
+      background: #38bdf8;
+      color: #030712;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ==========================================================================
+       INK ORBIT FEATURES CSS (from ink-orbit-features.tsx)
+       ========================================================================== */
+    .ib-root{--ib-w:#fff;--ib-ink:#111213;--ib-muted:#6b6f76;--ib-line:#e3e5e8;--ib-line-strong:#c7cad0;
+      --ib-bg:#f5f4ef;--ib-card:#fff;--ib-raise:#fff;--ib-accent:#222427;
+      --ib-shadow:0 12px 30px -12px rgba(0,0,0,.12),0 4px 10px -4px rgba(0,0,0,.06);
+      --ib-pattern:rgba(0,0,0,.055);
+      color:var(--ib-ink);
+      font-family:ui-sans-serif,-apple-system,"SF Pro Text","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+    .ib-root[data-theme="dark"]{--ib-w:#0e0f12;--ib-ink:#f2f3f5;--ib-muted:#9da1a8;--ib-line:#26282e;--ib-line-strong:#3b3e47;
+      --ib-bg:#090a0c;--ib-card:#121418;--ib-raise:#181a20;--ib-accent:#e5e7eb;
+      --ib-shadow:0 18px 40px -16px rgba(0,0,0,.65),0 6px 16px -6px rgba(0,0,0,.5);
+      --ib-pattern:rgba(255,255,255,.045)}
+    .ib-shell{max-width:1120px;margin:0 auto;padding:clamp(20px,4cqw,48px) 20px;position:relative}
+    .ib-sec{container-type:inline-size}
+    .ib-reveal{opacity:1;transform:none}
+    .ib-head{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;margin-bottom:clamp(28px,4cqw,48px)}
+    .ib-tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ib-muted);padding:4px 10px;border-radius:999px;border:1px solid var(--ib-line);background:var(--ib-card)}
+    .ib-tag::before{content:"";width:5px;height:5px;border-radius:999px;background:var(--ib-ink);display:inline-block}
+    .ib-h2{font-size:clamp(26px,4cqw,40px);font-weight:600;letter-spacing:-.03em;line-height:1.15;color:var(--ib-ink);margin:0}
+    .ib-h2 span{display:block}
+    .ib-h2 .ib-muted{color:var(--ib-muted)}
+    .ib-frame{position:relative}
+    .ib-c{position:absolute;width:12px;height:12px;border-style:solid;border-color:var(--ib-line-strong);pointer-events:none;transition:border-color .3s,transform .3s cubic-bezier(.2,.8,.2,1);z-index:2}
+    .ib-c-tl{top:-6px;left:-6px;border-top-width:1.5px;border-left-width:1.5px}
+    .ib-c-tr{top:-6px;right:-6px;border-top-width:1.5px;border-right-width:1.5px}
+    .ib-c-bl{bottom:-6px;left:-6px;border-bottom-width:1.5px;border-left-width:1.5px}
+    .ib-c-br{bottom:-6px;right:-6px;border-bottom-width:1.5px;border-right-width:1.5px}
+    .ib-frame-hover:hover>.ib-c{border-color:var(--ib-ink)}
+    .ib-frame-hover:hover>.ib-c-tl{transform:translate(-3px,-3px)}
+    .ib-frame-hover:hover>.ib-c-tr{transform:translate(3px,-3px)}
+    .ib-frame-hover:hover>.ib-c-bl{transform:translate(-3px,3px)}
+    .ib-frame-hover:hover>.ib-c-br{transform:translate(3px,3px)}
+    .ib-bento{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(22px,3cqw,34px)}
+    @media (min-width:768px){
+      .ib-bento{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .ib-wide{grid-column:1 / -1;width:min(100%,860px);justify-self:center}
+    }
+    .ib-card{background:linear-gradient(180deg,var(--ib-raise),var(--ib-card));border:1px solid var(--ib-line);padding:clamp(16px,2cqw,24px);display:flex;flex-direction:column;gap:14px;transition:border-color .3s,box-shadow .35s,background-color .45s;border-radius:4px}
+    .ib-card:hover{border-color:var(--ib-line-strong);box-shadow:var(--ib-shadow)}
+    .ib-card h3{font-size:14px;font-weight:600;letter-spacing:-.005em}
+    .ib-card p{font-size:13px;line-height:1.55;color:var(--ib-muted);max-width:44ch}
+    .ib-diagram{width:100%;height:auto;overflow:visible}
+    .ib-wide-copy{display:grid;grid-template-columns:1fr;gap:16px}
+    @media (min-width:560px){
+      .ib-wide-copy{grid-template-columns:1fr 1fr}
+      .ib-wide-copy>div:last-child{justify-self:end;text-align:left}
+    }
+    .ib-flow{stroke:var(--ib-line-strong);fill:none;stroke-width:1.2;transition:stroke .3s}
+    .ib-flow-on{stroke:var(--ib-ink)}
+    .ib-dash{stroke-dasharray:3 4;animation:ib-dash 1.2s linear infinite}
+    .ib-pkt{fill:var(--ib-ink)}
+    .ib-node{fill:var(--ib-raise);stroke:var(--ib-line-strong);transition:stroke .3s,transform .3s}
+    .ib-av{cursor:pointer;transition:transform .35s cubic-bezier(.2,.8,.2,1);transform-box:fill-box;transform-origin:center}
+    .ib-av:hover,.ib-av:focus-visible{transform:scale(1.18)}
+    .ib-av-tip{opacity:0;transition:opacity .2s;pointer-events:none}
+    .ib-av:hover .ib-av-tip,.ib-av:focus .ib-av-tip{opacity:1}
+    .ib-presence{animation:ib-pulse 2.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    .ib-sheet{transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity .7s}
+    .ib-sheet-new{animation:ib-sheet-in .7s cubic-bezier(.2,.8,.2,1) both}
+    .ib-tool{cursor:pointer;transition:transform .3s cubic-bezier(.2,.8,.2,1);transform-box:fill-box;transform-origin:center}
+    .ib-tool:hover,.ib-tool-on{transform:translateY(-2px)}
+    .ib-tool rect{transition:stroke .3s}
+    .ib-tool-on rect.ib-node{stroke:var(--ib-ink)}
+    .ib-chart{cursor:crosshair}
+    .ib-line-draw{stroke-dasharray:1000;stroke-dashoffset:0;transition:stroke-dashoffset 1.8s cubic-bezier(.4,.1,.2,1)}
+    .ib-glow{animation:ib-pulse 2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    @keyframes ib-dash{to{stroke-dashoffset:-14}}
+    @keyframes ib-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(1.35)}}
+    @keyframes ib-sheet-in{from{opacity:0;transform:translate(14px,-10px) rotate(4deg)}to{opacity:1;transform:none}}
+    .ib-bento>.ib-frame{display:flex;flex-direction:column}
+    .ib-bento>.ib-frame>.ib-card{flex:1}
+
+    /* Back Link Footer */
+    .footer-bar {
+      margin-top: 48px;
+      text-align: center;
+      padding: 24px;
+      font-size: 13px;
+      color: #64748b;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .footer-bar a {
+      color: #38bdf8;
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body data-page-theme="dark">
+
+  <!-- Control Header -->
+  <header class="control-bar">
+    <a href="/" class="brand-link">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>PrivacyLens</span>
+      <span class="badge">ink-orbit-features.tsx</span>
+    </a>
+
+    <div class="theme-toggle-group">
+      <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')">Dark</button>
+      <button class="theme-btn" id="btn-light" onclick="setTheme('light')">Light</button>
+    </div>
+  </header>
+
+  <!-- Component Container -->
+  <main class="ib-root" id="ib-container" data-theme="dark">
+    <div class="ib-shell">
+      <section class="ib-sec">
+        <div class="ib-reveal" data-in="true">
+          
+          <!-- Section Heading -->
+          <div class="ib-head">
+            <span class="ib-tag">Zero-Leakage Architecture</span>
+            <h2 class="ib-h2">
+              <span>Cryptographic <span class="ib-muted">Privacy</span></span>
+              <span>For Autonomous Agents</span>
+            </h2>
+          </div>
+
+          <!-- Bento Grid of 3 Live Diagrams -->
+          <div class="ib-bento">
+
+            <!-- Card 1 (Wide): Live Flow Diagram & Auto-Generated Reports Stack -->
+            <div class="ib-frame ib-wide ib-frame-hover">
+              <span class="ib-c ib-c-tl" aria-hidden="true"></span>
+              <span class="ib-c ib-c-tr" aria-hidden="true"></span>
+              <span class="ib-c ib-c-bl" aria-hidden="true"></span>
+              <span class="ib-c ib-c-br" aria-hidden="true"></span>
+
+              <div class="ib-card" id="flow-card">
+                <!-- SVG Flow Diagram -->
+                <svg class="ib-diagram" viewBox="0 0 540 160" aria-label="PrivacyLens Data Flow Diagram">
+                  <defs>
+                    <linearGradient id="ib-rays" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25"/>
+                      <stop offset="100%" stop-color="#10b981" stop-opacity="0.25"/>
+                    </linearGradient>
+                    <radialGradient id="ib-glow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/>
+                      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+                    </radialGradient>
+                    <pattern id="ib-hatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                      <line x1="0" y1="0" x2="0" y2="8" stroke="currentColor" stroke-width="0.7" opacity="0.12"/>
+                    </pattern>
+                  </defs>
+
+                  <!-- Background Hatch Pattern on Canvas -->
+                  <rect x="0" y="0" width="540" height="160" fill="url(#ib-hatch)"/>
+
+                  <!-- Connection Paths -->
+                  <!-- Untrusted DOM Nodes to Central Hub -->
+                  <path d="M 120 70 C 180 70, 200 95, 250 95" class="ib-flow ib-flow-on ib-dash" stroke-width="1.4"/>
+                  <path d="M 120 90 C 180 90, 200 115, 250 115" class="ib-flow ib-dash" stroke-width="1.2"/>
+
+                  <!-- Central Hub to Streaming Audit Stack -->
+                  <path d="M 370 95 C 400 95, 410 80, 440 80" class="ib-flow ib-flow-on ib-dash" stroke-width="1.4"/>
+                  <path d="M 370 115 C 400 115, 410 130, 440 130" class="ib-flow ib-dash" stroke-width="1.2"/>
+
+                  <!-- Untrusted DOM Host Nodes (Left) -->
+                  <g transform="translate(18, 20)">
+                    <!-- Node 1: Card Input -->
+                    <g class="ib-av" transform="translate(45, 15)">
+                      <circle cx="16" cy="16" r="14" class="ib-node"/>
+                      <text x="16" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">CC</text>
+                      <circle cx="26" cy="6" r="4" fill="#ef4444" class="ib-presence"/>
+                      <g class="ib-av-tip">
+                        <rect x="-30" y="-22" width="90" height="18" rx="4" fill="#0f172a" stroke="rgba(255,255,255,0.2)"/>
+                        <text x="15" y="-10" font-size="9" fill="#f8fafc" text-anchor="middle">Luhn Scrubbed</text>
+                      </g>
+                    </g>
+
+                    <!-- Node 2: Aadhaar/PAN -->
+                    <g class="ib-av" transform="translate(85, 30)">
+                      <circle cx="16" cy="16" r="14" class="ib-node"/>
+                      <text x="16" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">ID</text>
+                      <circle cx="26" cy="6" r="4" fill="#f59e0b" class="ib-presence"/>
+                      <g class="ib-av-tip">
+                        <rect x="-30" y="-22" width="90" height="18" rx="4" fill="#0f172a" stroke="rgba(255,255,255,0.2)"/>
+                        <text x="15" y="-10" font-size="9" fill="#f8fafc" text-anchor="middle">Verhoeff Match</text>
+                      </g>
+                    </g>
+
+                    <!-- Node 3: Session Token -->
+                    <g class="ib-av" transform="translate(25, 75)">
+                      <circle cx="16" cy="16" r="14" class="ib-node"/>
+                      <text x="16" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">KEY</text>
+                      <circle cx="26" cy="6" r="4" fill="#10b981" class="ib-presence"/>
+                      <g class="ib-av-tip">
+                        <rect x="-30" y="-22" width="90" height="18" rx="4" fill="#0f172a" stroke="rgba(255,255,255,0.2)"/>
+                        <text x="15" y="-10" font-size="9" fill="#f8fafc" text-anchor="middle">Shannon Entropy</text>
+                      </g>
+                    </g>
+
+                    <!-- Node 4: DOM Input -->
+                    <g class="ib-av" transform="translate(80, 85)">
+                      <circle cx="16" cy="16" r="14" class="ib-node"/>
+                      <text x="16" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">DOM</text>
+                      <circle cx="26" cy="6" r="4" fill="#38bdf8" class="ib-presence"/>
+                      <g class="ib-av-tip">
+                        <rect x="-30" y="-22" width="90" height="18" rx="4" fill="#0f172a" stroke="rgba(255,255,255,0.2)"/>
+                        <text x="15" y="-10" font-size="9" fill="#f8fafc" text-anchor="middle">Allowlist Walker</text>
+                      </g>
+                    </g>
+                  </g>
+
+                  <!-- Central Processing Hub Chip -->
+                  <g transform="translate(235, 72)">
+                    <rect x="0" y="0" width="130" height="58" rx="8" class="ib-node" stroke="#38bdf8" stroke-width="1.5"/>
+                    <rect x="4" y="4" width="122" height="50" rx="6" fill="url(#ib-rays)"/>
+                    <text x="65" y="26" font-size="11" font-weight="800" letter-spacing="1.5" fill="#38bdf8" text-anchor="middle">PRIVACYLENS</text>
+                    <text x="65" y="44" font-size="9.5" font-family="'JetBrains Mono', monospace" fill="currentColor" opacity="0.8" text-anchor="middle">AES-GCM-256 VAULT</text>
+                  </g>
+
+                  <!-- Live Auto-Printing Report Stack (Right) -->
+                  <g transform="translate(425, 45)">
+                    <!-- Bottom Sheet -->
+                    <g transform="translate(10, 10) rotate(-4)">
+                      <rect width="64" height="76" rx="4" class="ib-node" fill="#0b1120" stroke="rgba(255,255,255,0.15)"/>
+                    </g>
+                    <!-- Middle Sheet -->
+                    <g transform="translate(5, 5) rotate(2)">
+                      <rect width="64" height="76" rx="4" class="ib-node" fill="#0f172a" stroke="rgba(255,255,255,0.25)"/>
+                    </g>
+                    <!-- Top Active Sheet -->
+                    <g id="top-report-sheet" class="ib-sheet ib-sheet-new">
+                      <rect width="64" height="76" rx="4" class="ib-node" stroke="#38bdf8" stroke-width="1.2"/>
+                      <line x1="10" y1="14" x2="42" y2="14" stroke="#38bdf8" stroke-width="2"/>
+                      <line x1="10" y1="24" x2="54" y2="24" stroke="currentColor" opacity="0.4" stroke-width="1.5"/>
+                      <line x1="10" y1="32" x2="48" y2="32" stroke="currentColor" opacity="0.4" stroke-width="1.5"/>
+                      <line x1="10" y1="40" x2="52" y2="40" stroke="currentColor" opacity="0.4" stroke-width="1.5"/>
+                      <!-- Checkmark badge -->
+                      <circle cx="48" cy="58" r="7" fill="#10b981"/>
+                      <path d="M45 58 L47 60 L51 55" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+                    </g>
+                  </g>
+                </svg>
+
+                <!-- Copy Area -->
+                <div class="ib-wide-copy">
+                  <div>
+                    <h3>Real-Time Redaction Engine</h3>
+                    <p>Browser-local AST parsing intercepts sensitive tokens before they leave DOM memory, substituting deterministic vault hashes in real time.</p>
+                  </div>
+                  <div>
+                    <h3 id="reports-counter-label">Zero-Leakage Audit Stack</h3>
+                    <p>Cryptographic attestations stream to the local audit ledger on each execution step: <span id="report-count" style="font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8">148</span> verified proofs generated.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: Integrations Hub -->
+            <div class="ib-frame ib-frame-hover">
+              <span class="ib-c ib-c-tl" aria-hidden="true"></span>
+              <span class="ib-c ib-c-tr" aria-hidden="true"></span>
+              <span class="ib-c ib-c-bl" aria-hidden="true"></span>
+              <span class="ib-c ib-c-br" aria-hidden="true"></span>
+
+              <div class="ib-card">
+                <!-- SVG Integrations Hub Diagram -->
+                <svg class="ib-diagram" viewBox="0 0 280 130" aria-label="Integrations Hub Diagram">
+                  <g transform="translate(15, 20)">
+                    <!-- Tool 0: Claude 3.7 -->
+                    <g class="ib-tool ib-tool-on" id="tool-0" onclick="selectTool(0)" transform="translate(0, 0)">
+                      <rect width="52" height="42" rx="6" class="ib-node" stroke="#38bdf8" stroke-width="1.5"/>
+                      <text x="26" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">Claude</text>
+                      <text x="26" y="32" font-size="8" fill="#38bdf8" text-anchor="middle">ACTIVE</text>
+                    </g>
+                    <!-- Tool 1: GPT-4o -->
+                    <g class="ib-tool" id="tool-1" onclick="selectTool(1)" transform="translate(62, 0)">
+                      <rect width="52" height="42" rx="6" class="ib-node"/>
+                      <text x="26" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">GPT-4o</text>
+                      <text x="26" y="32" font-size="8" fill="currentColor" opacity="0.6" text-anchor="middle">READY</text>
+                    </g>
+                    <!-- Tool 2: Ollama Local -->
+                    <g class="ib-tool" id="tool-2" onclick="selectTool(2)" transform="translate(124, 0)">
+                      <rect width="52" height="42" rx="6" class="ib-node"/>
+                      <text x="26" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">Ollama</text>
+                      <text x="26" y="32" font-size="8" fill="currentColor" opacity="0.6" text-anchor="middle">LOCAL</text>
+                    </g>
+                    <!-- Tool 3: Chrome MV3 -->
+                    <g class="ib-tool" id="tool-3" onclick="selectTool(3)" transform="translate(186, 0)">
+                      <rect width="52" height="42" rx="6" class="ib-node"/>
+                      <text x="26" y="20" font-size="10" font-weight="700" fill="currentColor" text-anchor="middle">Ext MV3</text>
+                      <text x="26" y="32" font-size="8" fill="currentColor" opacity="0.6" text-anchor="middle">GATE</text>
+                    </g>
+                  </g>
+
+                  <!-- Animated sync beam -->
+                  <path d="M 40 64 L 140 100" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3 3" class="ib-dash" id="sync-beam"/>
+                  
+                  <!-- Sync status capsule -->
+                  <g transform="translate(90, 90)">
+                    <rect width="100" height="26" rx="13" class="ib-node" fill="#0b1120" stroke="#10b981"/>
+                    <circle cx="14" cy="13" r="3.5" fill="#10b981" class="ib-presence"/>
+                    <text x="56" y="17" font-size="9.5" font-weight="600" fill="#10b981" text-anchor="middle" id="tool-sync-status">Syncing Claude</text>
+                  </g>
+                </svg>
+
+                <div>
+                  <h3>Integrations Hub</h3>
+                  <p>Connect your automation frameworks — Playwright, Puppeteer, Claude Code, or browser extensions — into one zero-leakage proxy plane.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: Scrubbable Predictive Forecast Chart -->
+            <div class="ib-frame ib-frame-hover">
+              <span class="ib-c ib-c-tl" aria-hidden="true"></span>
+              <span class="ib-c ib-c-tr" aria-hidden="true"></span>
+              <span class="ib-c ib-c-bl" aria-hidden="true"></span>
+              <span class="ib-c ib-c-br" aria-hidden="true"></span>
+
+              <div class="ib-card">
+                <!-- SVG Chart with hover scrub -->
+                <svg class="ib-diagram ib-chart" id="forecast-svg" viewBox="0 0 280 130" aria-label="Leakage Defense & Confidence Chart" onpointermove="scrubChart(event)" onpointerleave="resetChart()">
+                  <defs>
+                    <linearGradient id="chart-area-grad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/>
+                      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0"/>
+                    </linearGradient>
+                  </defs>
+
+                  <!-- Grid lines -->
+                  <line x1="20" y1="20" x2="260" y2="20" stroke="currentColor" opacity="0.08" stroke-dasharray="2 4"/>
+                  <line x1="20" y1="55" x2="260" y2="55" stroke="currentColor" opacity="0.08" stroke-dasharray="2 4"/>
+                  <line x1="20" y1="90" x2="260" y2="90" stroke="currentColor" opacity="0.08" stroke-dasharray="2 4"/>
+
+                  <!-- Chart Area Fill -->
+                  <path id="chart-area-path" d="" fill="url(#chart-area-grad)"/>
+
+                  <!-- Chart Line -->
+                  <path id="chart-line-path" d="" fill="none" stroke="#38bdf8" stroke-width="2" class="ib-line-draw"/>
+
+                  <!-- Forecast Split Guideline (at index 8) -->
+                  <line id="forecast-split-line" x1="175" y1="15" x2="175" y2="110" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 3"/>
+                  <text x="178" y="24" font-size="8" fill="#f59e0b" font-weight="600">FORECAST</text>
+
+                  <!-- Scrub Indicator Dot & Tooltip -->
+                  <g id="chart-scrub-group" transform="translate(175, 45)">
+                    <line x1="0" y1="-30" x2="0" y2="65" stroke="currentColor" opacity="0.4" stroke-width="1"/>
+                    <circle cx="0" cy="0" r="5" fill="#38bdf8" stroke="#fff" stroke-width="2"/>
+                    <rect x="-24" y="-22" width="48" height="16" rx="4" fill="#0f172a" stroke="#38bdf8"/>
+                    <text id="chart-scrub-val" x="0" y="-11" font-size="9" font-family="'JetBrains Mono', monospace" font-weight="700" fill="#38bdf8" text-anchor="middle">99.8%</text>
+                  </g>
+                </svg>
+
+                <div>
+                  <h3>Predictive Redaction Confidence</h3>
+                  <p>Tripwire AI projects leakage prevention thresholds in real time across multi-step agent actions with 99.8% confidence.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer-bar">
+    <p>PrivacyLens Architecture & UI Ecosystem · <a href="/">Return to Main Landing Page &rarr;</a> · <a href="/navbar">View Liquid Glass Navbar Demo &rarr;</a></p>
+  </footer>
+
+  <script>
+    // Theme switching
+    function setTheme(theme) {
+      document.body.setAttribute("data-page-theme", theme);
+      document.getElementById("ib-container").setAttribute("data-theme", theme);
+      document.getElementById("btn-dark").classList.toggle("active", theme === "dark");
+      document.getElementById("btn-light").classList.toggle("active", theme === "light");
+    }
+
+    // Auto-increment reports count
+    let count = 148;
+    setInterval(() => {
+      count++;
+      const el = document.getElementById("report-count");
+      if (el) el.textContent = count;
+      const sheet = document.getElementById("top-report-sheet");
+      if (sheet) {
+        sheet.classList.remove("ib-sheet-new");
+        void sheet.offsetWidth; // trigger reflow
+        sheet.classList.add("ib-sheet-new");
+      }
+    }, 2800);
+
+    // Integrations tool selection
+    const tools = [
+      { name: "Claude", status: "Syncing Claude", x: 40 },
+      { name: "GPT-4o", status: "Syncing GPT-4o", x: 102 },
+      { name: "Ollama", status: "Syncing Ollama", x: 164 },
+      { name: "Chrome", status: "Syncing Extension", x: 226 },
+    ];
+    function selectTool(idx) {
+      for (let i = 0; i < 4; i++) {
+        const t = document.getElementById("tool-" + i);
+        if (t) {
+          if (i === idx) {
+            t.classList.add("ib-tool-on");
+            t.querySelector("rect").setAttribute("stroke", "#38bdf8");
+            t.querySelector("rect").setAttribute("stroke-width", "1.5");
+          } else {
+            t.classList.remove("ib-tool-on");
+            t.querySelector("rect").removeAttribute("stroke");
+          }
+        }
+      }
+      const syncStatus = document.getElementById("tool-sync-status");
+      if (syncStatus) syncStatus.textContent = tools[idx].status;
+      const beam = document.getElementById("sync-beam");
+      if (beam) {
+        beam.setAttribute("d", "M " + tools[idx].x + " 64 L 140 100");
+      }
+    }
+
+    // Chart Paths & Scrubbing
+    const chartVals = [35, 42, 40, 52, 48, 62, 58, 70, 68, 80, 88, 98];
+    const pad = 24;
+    const chartW = 280;
+    const chartH = 130;
+    const n = chartVals.length;
+    const lo = Math.min(...chartVals);
+    const hi = Math.max(...chartVals);
+    const span = hi - lo || 1;
+
+    const pts = chartVals.map((v, i) => [
+      pad + (i / (n - 1)) * (chartW - pad * 2),
+      chartH - pad - ((v - lo) / span) * (chartH - pad * 2)
+    ]);
+
+    let linePath = "";
+    pts.forEach(([x, y], i) => {
+      if (i === 0) {
+        linePath = "M " + x.toFixed(1) + " " + y.toFixed(1);
+      } else {
+        const [px, py] = pts[i - 1];
+        const cx = (px + x) / 2;
+        linePath += " C " + cx.toFixed(1) + " " + py.toFixed(1) + " " + cx.toFixed(1) + " " + y.toFixed(1) + " " + x.toFixed(1) + " " + y.toFixed(1);
+      }
+    });
+
+    const areaPath = linePath + " L " + pts[n - 1][0].toFixed(1) + " " + (chartH - pad) + " L " + pts[0][0].toFixed(1) + " " + (chartH - pad) + " Z";
+
+    document.getElementById("chart-line-path").setAttribute("d", linePath);
+    document.getElementById("chart-area-path").setAttribute("d", areaPath);
+
+    function scrubChart(e) {
+      const svg = document.getElementById("forecast-svg");
+      const rect = svg.getBoundingClientRect();
+      const clientX = e.clientX - rect.left;
+      const svgX = (clientX / rect.width) * chartW;
+
+      // Find nearest point
+      let bestIdx = 0;
+      let minD = Infinity;
+      pts.forEach(([px], i) => {
+        const d = Math.abs(px - svgX);
+        if (d < minD) {
+          minD = d;
+          bestIdx = i;
+        }
+      });
+
+      const [px, py] = pts[bestIdx];
+      const scrubGroup = document.getElementById("chart-scrub-group");
+      scrubGroup.setAttribute("transform", "translate(" + px.toFixed(1) + ", " + py.toFixed(1) + ")");
+      const scrubVal = document.getElementById("chart-scrub-val");
+      scrubVal.textContent = (chartVals[bestIdx] + 0.5).toFixed(1) + "%";
+    }
+
+    function resetChart() {
+      const defaultIdx = 8;
+      const [px, py] = pts[defaultIdx];
+      const scrubGroup = document.getElementById("chart-scrub-group");
+      scrubGroup.setAttribute("transform", "translate(" + px.toFixed(1) + ", " + py.toFixed(1) + ")");
+      const scrubVal = document.getElementById("chart-scrub-val");
+      scrubVal.textContent = (chartVals[defaultIdx] + 0.5).toFixed(1) + "%";
+    }
+    resetChart();
+  </script>
+</body>
+</html>
