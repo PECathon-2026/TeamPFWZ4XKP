@@ -71,3 +71,4 @@ describe("FR-B5 Visual Default-Deny Engine", () => {
     expect(redaction.redactedRegionCount).toBe(0);
   });
 });
+

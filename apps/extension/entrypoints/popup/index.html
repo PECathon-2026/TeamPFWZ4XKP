@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PrivacyLens</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body {
+      width: 280px;
+      padding: 16px;
+      background: #0f172a;
+      color: #f8fafc;
+      font-size: 13px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    .title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+    .shield-badge {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1e293b;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      margin-bottom: 14px;
+    }
+    .shield-text {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .shield-val {
+      font-size: 11px;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+    .btn {
+      width: 100%;
+      background: #38bdf8;
+      color: #0f172a;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      padding: 9px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+    .btn:hover {
+      background: #7dd3fc;
+    }
+    .btn-secondary {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+    }
+    .btn-secondary:hover {
+      background: #334155;
+      color: #fff;
+    }
+    .footer {
+      text-align: center;
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="status-dot"></div>
+    <div class="title">PrivacyLens</div>
+  </div>
+
+  <div class="shield-badge">
+    <span class="shield-text">Egress Gate</span>
+    <span class="shield-val">ARMED 🛡️</span>
+  </div>
+
+  <div class="shield-badge">
+    <span class="shield-text">Sanitization Mode</span>
+    <span class="shield-val">DOM & Visual</span>
+  </div>
+
+  <button id="open-panel-btn" class="btn">
+    Open Side Panel 🚀
+  </button>
+
+  <button id="open-hub-btn" class="btn btn-secondary">
+    Open Demo Hub 🌐
+  </button>
+
+  <button id="open-settings-btn" class="btn btn-secondary">
+    Settings & Custom Rules ⚙️
+  </button>
+
+  <div class="footer">
+    Zero-Leakage Local Processing
+  </div>
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>

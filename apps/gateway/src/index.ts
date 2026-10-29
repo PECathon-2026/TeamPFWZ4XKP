@@ -165,7 +165,19 @@ app.post("/v1/agent/step", async (c) => {
   }
 
   // Model reasoning through selected provider
-  const systemPrompt = "You are PrivacyLens web agent. Untrusted page DOM is provided in <page>. Propose next action.";
+  let systemPrompt = "You are PrivacyLens web agent. Untrusted page DOM is provided in <page>. Propose next action.";
+  const candidatePromptPaths = [
+    path.resolve(process.cwd(), "apps/gateway/prompts/system.v1.md"),
+    path.resolve(process.cwd(), "prompts/system.v1.md"),
+    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/apps/gateway/prompts/system.v1.md"),
+  ];
+  for (const p of candidatePromptPaths) {
+    if (fs.existsSync(p)) {
+      systemPrompt = fs.readFileSync(p, "utf-8");
+      break;
+    }
+  }
+
   const result = await provider.nextAction({
     system: systemPrompt,
     envelope,

@@ -7,12 +7,13 @@ if (!fs.existsSync(outdir)) {
   fs.mkdirSync(outdir, { recursive: true });
 }
 
-// 1. Bundle Background, Sidepanel & Options (ESM)
+// 1. Bundle Background, Sidepanel, Options & Popup (ESM)
 await esbuild.build({
   entryPoints: {
     background: "entrypoints/background.ts",
     "sidepanel/panel": "entrypoints/sidepanel/panel.ts",
     "options/options": "entrypoints/options/options.ts",
+    "popup/popup": "entrypoints/popup/popup.ts",
   },
   bundle: true,
   outdir: "dist",
@@ -45,6 +46,13 @@ fs.mkdirSync(path.join(outdir, "options"), { recursive: true });
 fs.copyFileSync(
   path.resolve("entrypoints/options/index.html"),
   path.join(outdir, "options/index.html")
+);
+
+// 5. Copy Popup index.html
+fs.mkdirSync(path.join(outdir, "popup"), { recursive: true });
+fs.copyFileSync(
+  path.resolve("entrypoints/popup/index.html"),
+  path.join(outdir, "popup/index.html")
 );
 
 console.log("PrivacyLens Extension bundled successfully into apps/extension/dist/");

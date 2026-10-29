@@ -134,13 +134,17 @@ export function tripwireScan(text: string): {
   hit: boolean;
   category?: DetectionCategory;
   snippet?: string;
+  offset?: number;
+  matchedText?: string;
 } {
   const findings = detectAll(text);
   if (findings.length > 0) {
     return {
       hit: true,
       category: findings[0].category,
-      // Do not return raw sensitive text; return category and safe snippet length only
+      offset: findings[0].start,
+      matchedText: findings[0].matchedText,
+      // Do not return raw sensitive text in prod; include category and offset
       snippet: `Match at offset ${findings[0].start} (${findings[0].category})`,
     };
   }

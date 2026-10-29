@@ -16,11 +16,13 @@ export class OllamaProvider implements Provider {
     envelope: Envelope;
     signal?: AbortSignal;
   }): Promise<ProviderResult> {
+    const nonce = crypto.randomUUID().slice(0, 8);
     const prompt = `
 Task: ${input.envelope.task}
 Snapshot Version: ${input.envelope.snapshotVersion}
-DOM Representation:
+<page nonce="${nonce}">
 ${JSON.stringify(input.envelope.snapshot, null, 2)}
+</page>
 
 Respond ONLY with a JSON object conforming to:
 {

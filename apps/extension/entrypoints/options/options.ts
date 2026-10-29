@@ -382,3 +382,4 @@ resetBtn.addEventListener("click", async () => {
 
 // Initialize on page load
 loadSettings();
+

@@ -19,18 +19,20 @@ export function detectCardNumbers(text: string): DetectionFinding[] {
     const raw = match[0];
     const digits = raw.replace(/[\s-]/g, "");
 
-    // Must be between 13 and 19 digits and pass Luhn
+    // Must be between 13 and 19 digits, pass Luhn, and have a recognized card brand or valid payment IIN prefix [2-6]
     if (digits.length >= 13 && digits.length <= 19 && validateLuhn(digits)) {
       const brand = identifyCardBrand(digits);
-      findings.push({
-        category: "CARD",
-        source: "checksum",
-        ruleId: `card.luhn.${brand}`,
-        confidence: 0.99,
-        start: match.index,
-        end: match.index + raw.length,
-        matchedText: raw,
-      });
+      if (brand !== "unknown" || /^[2-6]/.test(digits)) {
+        findings.push({
+          category: "CARD",
+          source: "checksum",
+          ruleId: `card.luhn.${brand}`,
+          confidence: brand !== "unknown" ? 0.99 : 0.85,
+          start: match.index,
+          end: match.index + raw.length,
+          matchedText: raw,
+        });
+      }
     }
   }
 

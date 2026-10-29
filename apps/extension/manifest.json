@@ -10,7 +10,8 @@
     "storage"
   ],
   "action": {
-    "default_title": "PrivacyLens"
+    "default_title": "PrivacyLens",
+    "default_popup": "dist/popup/index.html"
   },
   "background": {
     "service_worker": "dist/background.js",

@@ -103,6 +103,84 @@ function verifyFingerprint(element: HTMLElement, fp: ElementFingerprint): boolea
   return true;
 }
 
+let overlayShadowRoot: ShadowRoot | null = null;
+let overlayHost: HTMLElement | null = null;
+
+/**
+ * Renders non-intrusive read-only redaction highlights in a closed shadow DOM (FRONTEND.md §1 & §4.2).
+ */
+function renderPrivacyOverlay() {
+  if (!overlayHost) {
+    overlayHost = document.createElement("div");
+    overlayHost.id = "privacylens-shield-container";
+    overlayHost.style.position = "absolute";
+    overlayHost.style.top = "0";
+    overlayHost.style.left = "0";
+    overlayHost.style.width = "100%";
+    overlayHost.style.height = "100%";
+    overlayHost.style.pointerEvents = "none";
+    overlayHost.style.zIndex = "2147483647";
+    overlayShadowRoot = overlayHost.attachShadow({ mode: "closed" });
+    document.body.appendChild(overlayHost);
+  }
+
+  if (!overlayShadowRoot) return;
+
+  overlayShadowRoot.innerHTML = `
+    <style>
+      .pl-badge {
+        position: absolute;
+        background: #0284c7;
+        color: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        pointer-events: auto;
+        cursor: default;
+        z-index: 2147483647;
+      }
+      .pl-highlight {
+        position: absolute;
+        border: 2px dashed #0284c7;
+        background: rgba(56, 189, 248, 0.08);
+        border-radius: 6px;
+        pointer-events: none;
+        z-index: 2147483646;
+      }
+    </style>
+  `;
+
+  const selector = 'input[type="password"], input[autocomplete*="cc-"], input#cardNumber, input#pan, input#phone, input#email';
+  const inputs = document.querySelectorAll<HTMLElement>(selector);
+  inputs.forEach((el) => {
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
+
+    const box = document.createElement("div");
+    box.className = "pl-highlight";
+    box.style.left = `${rect.left + scrollX - 2}px`;
+    box.style.top = `${rect.top + scrollY - 2}px`;
+    box.style.width = `${rect.width + 4}px`;
+    box.style.height = `${rect.height + 4}px`;
+
+    const badge = document.createElement("div");
+    badge.className = "pl-badge";
+    badge.textContent = "🛡️ PrivacyLens Protected";
+    badge.title = "Protected locally. Raw value is never sent to the model.";
+    badge.style.left = `${Math.max(rect.left + scrollX, rect.right + scrollX - 140)}px`;
+    badge.style.top = `${Math.max(0, rect.top + scrollY - 10)}px`;
+
+    overlayShadowRoot?.appendChild(box);
+    overlayShadowRoot?.appendChild(badge);
+  });
+}
+
 /**
  * Message listener for extension orchestrator.
  */
@@ -111,6 +189,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     elementIdMap.clear();
     currentSnapshotVersion = message.snapshotVersion;
     const root = buildDOMSnapshot(document.body);
+    renderPrivacyOverlay();
     sendResponse({ ok: true, rawTree: root });
     return true;
   }
