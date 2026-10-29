@@ -19,3 +19,4 @@ openSettingsBtn.addEventListener("click", () => {
   chrome.runtime.openOptionsPage();
   window.close();
 });
+

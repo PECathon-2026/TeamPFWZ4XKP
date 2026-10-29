@@ -3,7 +3,7 @@
 > **Chrome extension (Manifest V3) that lets AI agents operate web pages while sensitive data never leaves the browser unredacted.**  
 > *Core Principle (PS-004): Compute what is sensitive locally. Reason globally only on sanitized data.*
 
-[![Tests](https://img.shields.io/badge/tests-24%20passed-success)](https://github.com/)
+[![Tests](https://img.shields.io/badge/tests-27%20passed-success)](https://github.com/)
 [![Canary Leakage](https://img.shields.io/badge/canary%20leakage-0%20(100%25%20containment)-brightgreen)](eval/results/summary.json)
 [![Detection Recall](https://img.shields.io/badge/detection%20recall-100%25-brightgreen)](eval/results/summary.json)
 [![Redaction Precision](https://img.shields.io/badge/redaction%20precision-100%25-brightgreen)](eval/results/summary.json)
