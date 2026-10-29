@@ -38,6 +38,49 @@ chrome.action?.onClicked?.addListener((tab) => {
 });
 
 /**
+ * Ensures offscreen document exists for FR-B5 Visual Default-Deny Canvas Masking.
+ */
+async function ensureOffscreenDocument(): Promise<boolean> {
+  const offscreen = (chrome as any).offscreen;
+  if (!offscreen) return false;
+
+  try {
+    const existing = await (chrome.runtime as any).getContexts?.({
+      contextTypes: ["OFFSCREEN_DOCUMENT"],
+    });
+    if (existing && existing.length > 0) return true;
+
+    await offscreen.createDocument({
+      url: "dist/offscreen/index.html",
+      reasons: ["BLOBS"],
+      justification: "Solid-fill opaque masking on visual frames (FR-B5)",
+    });
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+/**
+ * Requests solid-fill masking from the offscreen canvas worker (FR-B5).
+ */
+export async function maskScreenshot(imageDataUrl: string, regions: any[]): Promise<string> {
+  const ready = await ensureOffscreenDocument();
+  if (!ready) return imageDataUrl;
+
+  try {
+    const res = await chrome.runtime.sendMessage({
+      type: "MASK_IMAGE",
+      imageDataUrl,
+      regions,
+    });
+    return res?.maskedDataUrl || imageDataUrl;
+  } catch {
+    return imageDataUrl;
+  }
+}
+
+/**
  * Executes a single step of the agent run loop.
  */
 async function executeStep() {

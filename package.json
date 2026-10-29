@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:browser": "tsx eval/browser-test.ts",
     "eval": "tsx eval/runner/index.ts",
+    "package": "node scripts/package-extension.js",
     "gateway": "npm --workspace=@privacylens/gateway run dev"
   },
   "devDependencies": {
