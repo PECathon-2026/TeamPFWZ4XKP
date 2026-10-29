@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrivacyLens — Settings & Privacy Governance</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --border: #1f2937;
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --success: #10b981;
+      --danger: #ef4444;
+      --accent: #818cf8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 32px; font-size: 14px; }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 18px; margin-bottom: 24px; }
+    .logo { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; color: var(--primary); }
+    .logo-badge { font-size: 11px; background: rgba(56, 189, 248, 0.15); border: 1px solid var(--primary); color: var(--primary); padding: 3px 8px; border-radius: 999px; }
+
+    .nav-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .tab-btn { background: none; border: none; color: var(--text-muted); font-size: 14px; font-weight: 600; padding: 10px 16px; cursor: pointer; border-bottom: 2px solid transparent; }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
+    .card-title { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .card-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 12px; font-weight: 600; color: #d1d5db; }
+    input, select, textarea { background: #1f2937; border: 1px solid #374151; border-radius: 6px; color: #fff; padding: 9px 12px; font-size: 13px; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
+
+    .btn { background: var(--primary); color: #090d16; font-weight: 600; border: none; border-radius: 6px; padding: 9px 16px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+    .btn:hover { background: var(--primary-hover); color: #fff; }
+    .btn-secondary { background: #374151; color: #fff; }
+    .btn-secondary:hover { background: #4b5563; }
+    .btn-danger { background: #991b1b; color: #fecaca; }
+    .btn-danger:hover { background: #dc2626; color: #fff; }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th { text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    tr:last-child td { border-bottom: none; }
+
+    .badge-pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .badge-regex { background: rgba(129, 140, 248, 0.2); color: #a5b4fc; border: 1px solid #6366f1; }
+    .badge-css { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid #0284c7; }
+    .badge-active { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; }
+
+    .status-toast { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; display: none; }
+    .toast-success { background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; }
+    .toast-error { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; }
+
+    .sandbox-preview { background: #020617; border: 1px solid #1f2937; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: #38bdf8; min-height: 48px; white-space: pre-wrap; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <span>🛡️ PrivacyLens</span>
+        <span class="logo-badge">Settings & Governance</span>
+      </div>
+      <div style="font-size: 12px; color: var(--text-muted);">
+        Principle: <em>Compute locally, reason globally on sanitized data.</em>
+      </div>
+    </header>
+
+    <div id="status-toast" class="status-toast"></div>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" data-tab="tab-gateway">Gateway & Provider</button>
+      <button class="tab-btn" data-tab="tab-rules">Custom Privacy Rules (FR-D7)</button>
+      <button class="tab-btn" data-tab="tab-vault">Client Vault (FR-C3)</button>
+      <button class="tab-btn" data-tab="tab-backup">Backup & Export</button>
+    </div>
+
+    <!-- TAB 1: GATEWAY & PROVIDER -->
+    <div id="tab-gateway" class="tab-pane active">
+      <div class="card">
+        <div class="card-title">🌐 AI Gateway Configuration</div>
+        <div class="card-subtitle">Specify where sanitized envelopes are sent and how the model reasoner is backed.</div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="gateway-url">Gateway Endpoint URL</label>
+            <input type="text" id="gateway-url" value="http://127.0.0.1:8787" placeholder="http://127.0.0.1:8787">
+          </div>
+          <div class="form-group">
+            <label for="provider-select">Active Reasoner Provider</label>
+            <select id="provider-select">
+              <option value="mock">Deterministic Mock (Local Safe Evaluation)</option>
+              <option value="ollama">Ollama (100% Local Private LLM via 127.0.0.1:11434)</option>
+              <option value="openai-compatible">OpenAI-Compatible (Remote Reasoner)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="model-name">Model Name</label>
+            <input type="text" id="model-name" value="mock-v1" placeholder="llama3.2 or gpt-4o-mini">
+          </div>
+          <div class="form-group">
+            <label for="auth-token">Bearer Auth Token</label>
+            <input type="password" id="auth-token" value="dev_privacylens_token_001" placeholder="dev_privacylens_token_... ">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button id="save-gateway-btn" class="btn">Save Configuration</button>
+          <button id="test-conn-btn" class="btn btn-secondary">Test Connection 📡</button>
+        </div>
+        <div id="conn-result" style="margin-top: 10px; font-size: 12px; font-family: monospace;"></div>
+      </div>
+    </div>
+
+    <!-- TAB 2: CUSTOM PRIVACY RULES -->
+    <div id="tab-rules" class="tab-pane">
+      <div class="card">
+        <div class="card-title">➕ Add Custom Privacy Rule (FR-D7)</div>
+        <div class="card-subtitle">Define user-specific patterns, internal IDs, or CSS selectors that must never leave your machine.</div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="rule-name">Rule Name</label>
+            <input type="text" id="rule-name" placeholder="e.g. Employee ID, Confidential Tag">
+          </div>
+          <div class="form-group">
+            <label for="rule-type">Rule Type</label>
+            <select id="rule-type">
+              <option value="regex">Regex Text Pattern</option>
+              <option value="css_selector">DOM CSS Selector (.class or #id)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="rule-pattern">Pattern / Selector</label>
+            <input type="text" id="rule-pattern" placeholder="e.g. EMP-\d{6} or .internal-confidential">
+          </div>
+          <div class="form-group">
+            <label for="rule-category">Target Category</label>
+            <select id="rule-category">
+              <option value="CUSTOM">CUSTOM</option>
+              <option value="API_KEY">API_KEY</option>
+              <option value="AUTH_TOKEN">AUTH_TOKEN</option>
+              <option value="EMAIL">EMAIL</option>
+              <option value="PHONE">PHONE</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="rule-domain">Domain Scope (Optional)</label>
+            <input type="text" id="rule-domain" placeholder="e.g. *.corp.internal or leave blank for all">
+          </div>
+        </div>
+
+        <button id="add-rule-btn" class="btn">Add Rule 🔒</button>
+      </div>
+
+      <!-- Live Sandbox Test -->
+      <div class="card">
+        <div class="card-title">🧪 Live Rule Sandbox</div>
+        <div class="card-subtitle">Test your regex pattern instantly against sample text before deploying.</div>
+        <div class="form-group">
+          <label for="sandbox-input">Sample Input Text</label>
+          <input type="text" id="sandbox-input" placeholder="Type text e.g.: Staff member EMP-998811 reported incident.">
+        </div>
+        <button id="test-sandbox-btn" class="btn btn-secondary" style="margin-top: 10px;">Test Redaction</button>
+        <div id="sandbox-output" class="sandbox-preview">// Sanitized result will appear here...</div>
+      </div>
+
+      <!-- Active Rules Table -->
+      <div class="card">
+        <div class="card-title">📋 Active Custom Rules</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Pattern</th>
+              <th>Category</th>
+              <th>Domain</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rules-table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: CLIENT-SIDE VAULT -->
+    <div id="tab-vault" class="tab-pane">
+      <div class="card">
+        <div class="card-title">🔐 Client-Side Cryptographic Vault (FR-C3)</div>
+        <div class="card-subtitle">AES-256-GCM + PBKDF2 local secret store. Secrets never leave your browser in plaintext.</div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="vault-pass">Master Passphrase</label>
+            <input type="password" id="vault-pass" placeholder="Enter vault passphrase to unlock/add">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 4px;">
+          <button id="unlock-vault-btn" class="btn btn-secondary">Unlock Vault 🔓</button>
+          <button id="lock-vault-btn" class="btn btn-danger">Lock Vault 🔒</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">➕ Add Secret to Vault</div>
+        <div class="card-subtitle">Registered secrets are substituted dynamically on the client side at execution time.</div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="secret-key">Secret Key Reference</label>
+            <input type="text" id="secret-key" placeholder="e.g. card.number, api.github">
+          </div>
+          <div class="form-group">
+            <label for="secret-cat">Category</label>
+            <select id="secret-cat">
+              <option value="CARD">Payment Card</option>
+              <option value="API_KEY">API Key</option>
+              <option value="AUTH_TOKEN">Auth Token</option>
+              <option value="PASSWORD">Password</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="secret-val">Secret Value (Encrypted Locally)</label>
+            <input type="password" id="secret-val" placeholder="Raw secret value">
+          </div>
+        </div>
+
+        <button id="add-secret-btn" class="btn">Store Encrypted Secret 🛡️</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔑 Registered Vault References</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Key Name</th>
+              <th>Category</th>
+              <th>Safe Reference Tag</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="vault-table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: BACKUP & EXPORT -->
+    <div id="tab-backup" class="tab-pane">
+      <div class="card">
+        <div class="card-title">💾 Backup & Import Configuration</div>
+        <div class="card-subtitle">Export your rules and settings or restore from a previously exported configuration.</div>
+
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button id="export-btn" class="btn">Export Settings (JSON) 📤</button>
+          <button id="import-btn" class="btn btn-secondary">Import Settings 📥</button>
+          <input type="file" id="import-file" style="display: none;" accept=".json">
+          <button id="reset-btn" class="btn btn-danger">Reset to Defaults ⚠️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js" type="module"></script>
+</body>
+</html>

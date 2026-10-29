@@ -1,0 +1,189 @@
+import fs from "fs";
+import path from "path";
+import { Hono } from "hono";
+import { serve } from "@hono/node-server";
+import {
+  EnvelopeSchema,
+  StepResponse,
+  StepResponseSchema,
+} from "@privacylens/protocol";
+import { tripwireScan } from "@privacylens/detector";
+import { getProvider } from "./adapters/factory.js";
+
+const app = new Hono();
+const provider = getProvider();
+
+const PORT = parseInt(process.env.PORT || "8787", 10);
+const VALID_DEV_TOKEN = "dev_privacylens_token_001";
+
+// 1. Health check
+app.get("/healthz", (c) => {
+  return c.json({ status: "ok", version: "0.1.0", service: "privacylens-gateway" });
+});
+
+// Demo Hub Homepage served over HTTP
+app.get("/", (c) => {
+  const candidates = [
+    path.resolve(process.cwd(), "eval/demo-hub.html"),
+    path.resolve(process.cwd(), "../../eval/demo-hub.html"),
+    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/demo-hub.html"),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      return c.html(fs.readFileSync(p, "utf-8"));
+    }
+  }
+  return c.text("Demo hub not found", 404);
+});
+
+// Demo Page served over HTTP
+app.get("/demo", (c) => {
+  const candidates = [
+    path.resolve(process.cwd(), "eval/demo-page.html"),
+    path.resolve(process.cwd(), "../../eval/demo-page.html"),
+    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/demo-page.html"),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      return c.html(fs.readFileSync(p, "utf-8"));
+    }
+  }
+  return c.text("Demo page not found", 404);
+});
+
+// Scenario S2: Auth & OTP Page
+app.get("/auth", (c) => {
+  const candidates = [
+    path.resolve(process.cwd(), "eval/demo-auth.html"),
+    path.resolve(process.cwd(), "../../eval/demo-auth.html"),
+    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/demo-auth.html"),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      return c.html(fs.readFileSync(p, "utf-8"));
+    }
+  }
+  return c.text("Auth page not found", 404);
+});
+
+// Scenario S4: Video Conferencing Page
+app.get("/video", (c) => {
+  const candidates = [
+    path.resolve(process.cwd(), "eval/demo-video.html"),
+    path.resolve(process.cwd(), "../../eval/demo-video.html"),
+    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/demo-video.html"),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      return c.html(fs.readFileSync(p, "utf-8"));
+    }
+  }
+  return c.text("Video demo page not found", 404);
+});
+
+// Scenario S3: Customer Support KYC Page
+app.get("/support", (c) => {
+  const candidates = [
+    path.resolve(process.cwd(), "eval/demo-support.html"),
+    path.resolve(process.cwd(), "../../eval/demo-support.html"),
+    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/demo-support.html"),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      return c.html(fs.readFileSync(p, "utf-8"));
+    }
+  }
+  return c.text("Support demo page not found", 404);
+});
+
+// Scenario S5: Developer Settings Page
+app.get("/dev", (c) => {
+  const candidates = [
+    path.resolve(process.cwd(), "eval/demo-dev.html"),
+    path.resolve(process.cwd(), "../../eval/demo-dev.html"),
+    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/demo-dev.html"),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      return c.html(fs.readFileSync(p, "utf-8"));
+    }
+  }
+  return c.text("Developer demo page not found", 404);
+});
+
+// 2. Auth registration
+app.post("/v1/auth/register", (c) => {
+  return c.json({
+    accessToken: VALID_DEV_TOKEN,
+    tokenType: "Bearer",
+    expiresIn: 3600,
+  });
+});
+
+// 3. Agent step endpoint
+app.post("/v1/agent/step", async (c) => {
+  const authHeader = c.req.header("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return c.json({ code: "UNAUTHENTICATED", message: "Missing or invalid Bearer token" }, 401);
+  }
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ code: "BAD_SCHEMA", message: "Invalid JSON body" }, 400);
+  }
+
+  // Schema validation
+  const parseResult = EnvelopeSchema.safeParse(body);
+  if (!parseResult.success) {
+    return c.json(
+      {
+        code: "BAD_SCHEMA",
+        message: "Envelope failed strict schema validation",
+        details: parseResult.error.flatten(),
+      },
+      400
+    );
+  }
+
+  const envelope = parseResult.data;
+
+  // Second-pass PII scan (Defense in Depth)
+  const serialized = JSON.stringify(envelope);
+  const scanResult = tripwireScan(serialized);
+  if (scanResult.hit) {
+    // Return category and offset only; NEVER echo raw matched text!
+    return c.json(
+      {
+        code: "SENSITIVE_DETECTED",
+        message: `Second-pass gateway scan detected sensitive ${scanResult.category}`,
+        details: { category: scanResult.category, note: scanResult.snippet },
+      },
+      422
+    );
+  }
+
+  // Model reasoning through selected provider
+  const systemPrompt = "You are PrivacyLens web agent. Untrusted page DOM is provided in <page>. Propose next action.";
+  const result = await provider.nextAction({
+    system: systemPrompt,
+    envelope,
+  });
+
+  const response: StepResponse = {
+    action: result.action,
+    note: result.note || "Executing next step",
+    usage: result.usage,
+    requestId: envelope.requestId,
+  };
+
+  return c.json(StepResponseSchema.parse(response));
+});
+
+console.log(`PrivacyLens Gateway running on http://127.0.0.1:${PORT}`);
+serve({
+  fetch: app.fetch,
+  port: PORT,
+});
+

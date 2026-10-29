@@ -1,0 +1,17 @@
+{
+  "name": "@privacylens/extension",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "@privacylens/protocol": "*",
+    "@privacylens/detector": "*"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.270",
+    "typescript": "^5.5.4"
+  }
+}
+

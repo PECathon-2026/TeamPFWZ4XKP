@@ -1,0 +1,17 @@
+{
+  "name": "@privacylens/eval",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "run": "tsx runner/index.ts"
+  },
+  "dependencies": {
+    "@privacylens/protocol": "*",
+    "@privacylens/detector": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.1",
+    "typescript": "^5.5.4"
+  }
+}
+

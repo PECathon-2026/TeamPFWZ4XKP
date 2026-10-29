@@ -1,0 +1,25 @@
+{
+  "name": "@privacylens/detector",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@privacylens/protocol": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.3"
+  }
+}

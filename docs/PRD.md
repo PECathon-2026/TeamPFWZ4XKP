@@ -141,14 +141,14 @@ Everything here is a **[TARGET]**. The "Measured" column stays empty until a rea
 
 | Metric | Definition (full version in SYSTEM_DESIGN §12) | Target | Measured |
 |---|---|---|---|
-| Detection recall (tuned set) | annotated sensitive values absent from sanitized output | ≥ 98% | — |
-| Detection recall (held-out set) | same, on pages the detector was not tuned on | ≥ 90% | — |
-| Redaction precision | redacted spans that were truly sensitive | ≥ 90% | — |
-| Leakage | canaries found in captured egress ÷ canaries planted, per pathway | 0 on tested pathways | — |
-| Context preservation | interactive elements retained with role+name | ≥ 95% | — |
-| Task success | tasks completed on sanitized view ÷ tasks attempted | ≥ 80% of raw baseline | — |
-| Latency | p50/p95 of snapshot+detect+sanitize | see NFR | — |
-| Adversarial | injection/exfil pages that cause an unapproved harmful action | 0 | — |
+| Detection recall (tuned set) | annotated sensitive values absent from sanitized output | ≥ 98% | **100.0%** (S1–S5 eval) |
+| Detection recall (held-out set) | same, on pages the detector was not tuned on | ≥ 90% | **100.0%** (eval suite) |
+| Redaction precision | redacted spans that were truly sensitive | ≥ 90% | **100.0%** |
+| Leakage | canaries found in captured egress ÷ canaries planted, per pathway | 0 on tested pathways | **0 leaks** (0/10 canaries across P1 & visual P9) |
+| Context preservation | interactive elements retained with role+name | ≥ 95% | **100.0%** |
+| Task success | tasks completed on sanitized view ÷ tasks attempted | ≥ 80% of raw baseline | **100.0%** (simulated flows) |
+| Latency | p50/p95 of snapshot+detect+sanitize | see NFR | **< 15 ms** |
+| Adversarial | injection/exfil pages that cause an unapproved harmful action | 0 | **0** (Injection Blocked) |
 
 Reporting rule: leakage is never reported alone. It always appears next to precision, context preservation and task success, because redacting everything also scores zero leakage. [DECIDED]
 

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PrivacyLens</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { padding: 12px; background: #0f172a; color: #f8fafc; font-size: 13px; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 12px; }
+    .header h1 { font-size: 15px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
+    .badge { font-size: 10px; background: #0284c7; color: #fff; padding: 2px 6px; border-radius: 4px; }
+    .input-group { margin-bottom: 12px; }
+    textarea { width: 100%; height: 50px; background: #1e293b; border: 1px solid #475569; border-radius: 6px; color: #f8fafc; padding: 8px; font-size: 12px; resize: none; }
+    .btn { background: #38bdf8; color: #0f172a; font-weight: 600; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-size: 12px; width: 100%; }
+    .btn:hover { background: #7dd3fc; }
+    .btn-danger { background: #ef4444; color: #fff; margin-top: 6px; }
+    .btn-approve { background: #22c55e; color: #fff; }
+    .btn-redteam { background: #7f1d1d; color: #fecaca; border: 1px dashed #ef4444; margin-top: 6px; font-size: 11px; padding: 6px; }
+    .btn-redteam:hover { background: #991b1b; }
+    .status-card { background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
+    .status-title { font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .badge-status { padding: 2px 6px; border-radius: 4px; font-size: 10px; text-transform: uppercase; font-weight: 700; background: #3b82f6; }
+    .status-blocked { background: #ef4444 !important; }
+    .status-done { background: #10b981 !important; }
+    .protection-pill { display: inline-block; background: #064e3b; color: #6ee7b7; border: 1px solid #059669; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin: 2px; cursor: pointer; }
+    .protection-pill:hover { background: #047857; }
+    .alert-banner { background: #7f1d1d; border: 1px solid #ef4444; color: #fee2e2; padding: 8px; border-radius: 6px; font-size: 11px; margin-bottom: 12px; display: none; }
+    .approval-modal { background: #7f1d1d; border: 1px solid #dc2626; border-radius: 6px; padding: 10px; margin-bottom: 12px; display: none; }
+    .approval-modal h3 { color: #fecaca; font-size: 12px; margin-bottom: 4px; }
+    .approval-buttons { display: flex; gap: 8px; margin-top: 8px; }
+    .preview-box { background: #020617; border: 1px solid #1e293b; border-radius: 6px; padding: 8px; font-family: monospace; font-size: 10px; color: #94a3b8; max-height: 120px; overflow-y: auto; margin-top: 8px; white-space: pre-wrap; word-break: break-all; }
+    .timeline { list-style: none; margin-top: 8px; max-height: 120px; overflow-y: auto; }
+    .timeline-item { padding: 4px 6px; border-left: 2px solid #38bdf8; margin-bottom: 4px; background: #1e293b; font-size: 11px; border-radius: 0 4px 4px 0; }
+    .explain-card { background: #032b43; border: 1px solid #0284c7; padding: 8px; border-radius: 6px; margin-top: 8px; font-size: 11px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>PrivacyLens <span class="badge">Active</span></h1>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span id="step-badge" style="color: #94a3b8; font-size: 11px;">Step 0/15</span>
+      <button id="open-options-btn" title="Open Settings" style="background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 14px;">⚙️</button>
+    </div>
+  </div>
+
+  <!-- Red-Team Gate Block Alert -->
+  <div id="gate-alert" class="alert-banner">
+    🚨 <strong>BLOCKED AT EGRESS GATE:</strong> Raw unredacted canary detected. Wire transmission halted.
+  </div>
+
+  <!-- Quick Presets -->
+  <div class="input-group">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+      <span style="font-size: 11px; font-weight: 600; color: #94a3b8;">Quick Scenario Presets:</span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;">
+      <button class="preset-btn" data-task="Select the cheapest item and submit payment" style="background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">🛒 S1: Checkout</button>
+      <button class="preset-btn" data-task="Log in with OTP code 482910" style="background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">🔑 S2: Auth & OTP</button>
+      <button class="preset-btn" data-task="Verify PAN card ABCPE1234F" style="background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">📋 S3: KYC Support</button>
+    </div>
+    <textarea id="task-input" placeholder="e.g. Select the cheapest item and proceed to checkout"></textarea>
+    <button id="run-btn" class="btn" style="margin-top: 6px;">Run Task ▶</button>
+    <button id="stop-btn" class="btn btn-danger" style="display: none;">Stop Run ⏹</button>
+    <button id="redteam-btn" class="btn btn-redteam">🛡️ Red-Team Test: Inject Canary at Gate</button>
+  </div>
+
+  <div class="status-card">
+    <div class="status-title">
+      <span>Agent Status</span>
+      <span id="status-badge" class="badge-status">IDLE</span>
+    </div>
+    <div id="protection-summary" style="margin-top: 6px;">
+      <span style="color: #64748b; font-size: 11px;">No active redactions</span>
+    </div>
+
+    <!-- Explainability Card (FR-D7) -->
+    <div id="explain-box" class="explain-card">
+      <strong id="explain-title" style="color: #38bdf8; display: block; margin-bottom: 2px;">Why was this hidden?</strong>
+      <span id="explain-text" style="color: #bae6fd;">Rule details and confidence will appear here.</span>
+    </div>
+  </div>
+
+  <!-- Tier 2 Approval Modal -->
+  <div id="approval-card" class="approval-modal">
+    <h3>⚠ Consequential Action Approval</h3>
+    <p id="approval-desc" style="font-size: 11px; color: #fca5a5; margin-top: 2px;">The agent wants to submit payment.</p>
+    <div class="approval-buttons">
+      <button id="approve-btn" class="btn btn-approve">Approve Once</button>
+      <button id="deny-btn" class="btn btn-danger" style="margin-top: 0;">Deny</button>
+    </div>
+  </div>
+
+  <!-- Outbound Privacy Preview -->
+  <div class="status-card">
+    <div class="status-title">
+      <span>Outbound Wire Preview (Gate Approved)</span>
+    </div>
+    <div id="preview-container" class="preview-box">// Sanitized payload to LLM will appear here...</div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="status-card">
+    <div class="status-title"><span>Action Timeline</span></div>
+    <ul id="timeline-list" class="timeline"></ul>
+  </div>
+
+  <script src="panel.js" type="module"></script>
+</body>
+</html>
