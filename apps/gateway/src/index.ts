@@ -10,15 +10,55 @@ import {
 import { tripwireScan } from "@privacylens/detector";
 import { getProvider } from "./adapters/factory.js";
 
+// Auto-load .env from apps/gateway/.env or workspace root .env if present
+function loadEnv() {
+  const envCandidates = [
+    path.resolve(process.cwd(), "apps/gateway/.env"),
+    path.resolve(process.cwd(), ".env"),
+    path.resolve(process.cwd(), "../../.env"),
+  ];
+  for (const envPath of envCandidates) {
+    if (fs.existsSync(envPath)) {
+      try {
+        const content = fs.readFileSync(envPath, "utf-8");
+        for (const rawLine of content.split("\n")) {
+          const line = rawLine.trim();
+          if (!line || line.startsWith("#")) continue;
+          const eqIdx = line.indexOf("=");
+          if (eqIdx !== -1) {
+            const key = line.slice(0, eqIdx).trim();
+            let val = line.slice(eqIdx + 1).trim();
+            if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+              val = val.slice(1, -1);
+            }
+            if (!(key in process.env)) {
+              process.env[key] = val;
+            }
+          }
+        }
+      } catch {
+        // Ignore read errors
+      }
+    }
+  }
+}
+loadEnv();
+
 const app = new Hono();
-const provider = getProvider();
+const defaultProvider = getProvider();
 
 const PORT = parseInt(process.env.PORT || "8787", 10);
 const isDev = process.env.NODE_ENV !== "production";
 
 // 1. Health check
 app.get("/healthz", (c) => {
-  return c.json({ status: "ok", version: "0.1.0", service: "privacylens-gateway" });
+  return c.json({
+    status: "ok",
+    version: "0.1.0",
+    service: "privacylens-gateway",
+    provider: defaultProvider.name,
+    model: (defaultProvider as any).model || process.env.MODEL || "default",
+  });
 });
 
 // Product Landing Page served over HTTP
@@ -77,20 +117,6 @@ if (isDev) {
       }
     }
     return c.text("Navbar demo page not found", 404);
-  });
-
-  // Ink Orbit Features Dedicated Demo Page
-  app.get("/features", (c) => {
-    const candidates = [
-      path.resolve(process.cwd(), "eval/demo-features.html"),
-      path.resolve(process.cwd(), "../../eval/demo-features.html"),
-    ];
-    for (const p of candidates) {
-      if (fs.existsSync(p)) {
-        return c.html(fs.readFileSync(p, "utf-8"));
-      }
-    }
-    return c.text("Features demo page not found", 404);
   });
 
   // Scenario S2: Auth & OTP Page
@@ -235,24 +261,43 @@ app.post("/v1/agent/step", async (c) => {
     }
   }
 
-  const result = await provider.nextAction({
-    system: systemPrompt,
-    envelope,
-  });
+  // Allow per-request provider / model overrides from extension headers
+  const reqProvider = c.req.header("X-Provider");
+  const reqModel = c.req.header("X-Model");
+  const reqKey = c.req.header("X-Provider-Key");
+  const activeProvider = (reqProvider || reqModel || reqKey)
+    ? getProvider(reqProvider, reqModel, reqKey)
+    : defaultProvider;
 
-  const response: StepResponse = {
-    action: result.action,
-    note: result.note || "Executing next step",
-    usage: result.usage,
-    requestId: envelope.requestId,
-  };
+  try {
+    const result = await activeProvider.nextAction({
+      system: systemPrompt,
+      envelope,
+    });
 
-  return c.json(StepResponseSchema.parse(response));
+    const response: StepResponse = {
+      action: result.action,
+      note: result.note || "Executing next step",
+      usage: result.usage,
+      requestId: envelope.requestId,
+    };
+
+    return c.json(StepResponseSchema.parse(response));
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Provider failure";
+    console.error(`[Gateway Provider Error]: ${message}`);
+    return c.json(
+      {
+        code: "PROVIDER_ERROR",
+        message,
+      },
+      502
+    );
+  }
 });
 
-console.log(`PrivacyLens Gateway running on http://127.0.0.1:${PORT}`);
+console.log(`PrivacyLens Gateway running on http://127.0.0.1:${PORT} [Default Provider: ${defaultProvider.name}]`);
 serve({
   fetch: app.fetch,
   port: PORT,
 });
-

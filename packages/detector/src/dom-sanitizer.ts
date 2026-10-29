@@ -23,6 +23,7 @@ export function sanitizeDOMTree(
   const rawValuesMap = existingMap;
 
   function sanitizeNode(node: DOMNode): DOMNode {
+    if (!node) return node;
     const newAttributes: Record<string, string> = { ...(node.attributes || {}) };
 
     // 0. User-defined selector rules (FR-D7)
@@ -40,6 +41,7 @@ export function sanitizeDOMTree(
         rawValuesMap.set(newAttributes.value, placeholder);
       }
 
+      const validChildren = (node.children || []).filter((c): c is DOMNode => Boolean(c));
       return {
         ...node,
         text: node.text ? placeholder : undefined,
@@ -47,7 +49,7 @@ export function sanitizeDOMTree(
           ...newAttributes,
           value: newAttributes.value ? placeholder : newAttributes.value,
         },
-        children: (node.children || []).map((c) => sanitizeNode(c)),
+        children: validChildren.map((c) => sanitizeNode(c)),
       };
     }
 
@@ -95,13 +97,22 @@ export function sanitizeDOMTree(
     }
 
     // 4. Recurse children
-    const sanitizedChildren = (node.children || []).map((child) => sanitizeNode(child));
+    const validChildren = (node.children || []).filter((c): c is DOMNode => Boolean(c));
+    const sanitizedChildren = validChildren.map((child) => sanitizeNode(child));
 
     return {
       ...node,
       text: sanitizedText,
       attributes: newAttributes,
       children: sanitizedChildren,
+    };
+  }
+
+  if (!root) {
+    return {
+      sanitizedTree: root,
+      ledger,
+      rawValuesMap,
     };
   }
 

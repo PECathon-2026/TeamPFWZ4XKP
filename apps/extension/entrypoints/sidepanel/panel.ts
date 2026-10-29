@@ -63,48 +63,55 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
   }
 });
 
+// Update tab ID on tab switch and clear stale cards
+chrome.tabs.onActivated?.addListener((activeInfo) => {
+  currentTabId = activeInfo.tabId;
+  resetCards();
+});
+
 // Check connection status on load
 async function checkConnection() {
   const data = await chrome.storage.local.get(["gatewayUrl", "authToken"]);
-  const url = data.gatewayUrl || "";
-  const hasToken = !!(data.authToken && data.authToken.trim());
-
-  if (!url || !hasToken) {
-    setConnStatus("offline");
-    setupBanner.classList.add("visible");
-    return;
-  }
+  const url = (data.gatewayUrl || "http://127.0.0.1:8787").trim();
 
   try {
     const res = await fetch(`${url}/healthz`, {
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(3000),
     });
     if (res.ok) {
-      setConnStatus("connected");
+      const json = await res.json();
+      const provName = json.provider ? ` (${json.provider})` : "";
+      setConnStatus("connected", `Connected${provName}`);
       setupBanner.classList.remove("visible");
+      // Save default url if empty
+      if (!data.gatewayUrl) {
+        chrome.storage.local.set({ gatewayUrl: url });
+      }
     } else {
-      setConnStatus("error");
+      setConnStatus("error", "Gateway HTTP " + res.status);
+      setupBanner.classList.add("visible");
     }
   } catch {
-    setConnStatus("error");
+    setConnStatus("offline", "Gateway offline");
+    setupBanner.classList.add("visible");
   }
 }
 
-function setConnStatus(state: "connected" | "error" | "offline" | "checking") {
+function setConnStatus(state: "connected" | "error" | "offline" | "checking", label?: string) {
   connDot.className = "conn-dot";
   connLabel.className = "conn-label";
   if (state === "connected") {
     connDot.classList.add("connected");
     connLabel.classList.add("connected");
-    connLabel.textContent = "Connected";
+    connLabel.textContent = label || "Connected";
   } else if (state === "error") {
     connDot.classList.add("error");
     connLabel.classList.add("error");
-    connLabel.textContent = "Gateway offline";
+    connLabel.textContent = label || "Gateway error";
   } else if (state === "offline") {
-    connLabel.textContent = "Not configured";
+    connLabel.textContent = label || "Gateway offline";
   } else {
-    connLabel.textContent = "Checking...";
+    connLabel.textContent = label || "Checking...";
   }
 }
 
@@ -126,11 +133,22 @@ document.querySelectorAll(".preset-chip").forEach((btn) => {
 });
 
 // Run button
-runBtn.addEventListener("click", () => {
+runBtn.addEventListener("click", async () => {
   const task = taskInput.value.trim();
   if (!task) {
     taskInput.focus();
     return;
+  }
+
+  // Get current active tab ID
+  let targetTabId = currentTabId;
+  try {
+    const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (tabs[0]?.id) {
+      targetTabId = tabs[0].id;
+    }
+  } catch {
+    // Fall back to currentTabId
   }
 
   // Reset state
@@ -141,7 +159,7 @@ runBtn.addEventListener("click", () => {
   statusText.textContent = "Starting...";
   progressFill.style.width = "0%";
 
-  chrome.runtime.sendMessage({ type: "START", task });
+  chrome.runtime.sendMessage({ type: "START", task, tabId: targetTabId });
 });
 
 // Stop button

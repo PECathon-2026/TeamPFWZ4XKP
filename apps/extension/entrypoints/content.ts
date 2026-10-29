@@ -229,7 +229,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     elementIdMap.clear();
     currentSnapshotVersion = message.snapshotVersion;
     const root = buildDOMSnapshot(document.body);
-    renderPrivacyOverlay();
+    try {
+      renderPrivacyOverlay();
+    } catch {
+      // Non-fatal if overlay fails to draw
+    }
     sendResponse({ ok: true, rawTree: root });
     return true;
   }

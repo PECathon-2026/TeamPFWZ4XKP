@@ -5,22 +5,16 @@ const statusLabel = document.getElementById("status-label") as HTMLElement;
 
 async function checkGateway() {
   const data = await chrome.storage.local.get(["gatewayUrl", "authToken"]);
-  const url = (data.gatewayUrl || "").trim();
-  const token = (data.authToken || "").trim();
-
-  if (!url || !token) {
-    statusDot.style.background = "#475569";
-    statusLabel.textContent = "Not configured — open Settings";
-    return;
-  }
+  const url = (data.gatewayUrl || "http://127.0.0.1:8787").trim();
 
   try {
     const res = await fetch(`${url}/healthz`, {
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(3000),
     });
     if (res.ok) {
+      const json = await res.json();
       statusDot.className = "status-dot connected";
-      statusLabel.textContent = "Gateway connected";
+      statusLabel.textContent = json.provider ? `Gateway active (${json.provider})` : "Gateway connected";
       statusLabel.style.color = "#6ee7b7";
     } else {
       throw new Error();

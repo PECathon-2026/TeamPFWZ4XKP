@@ -7,6 +7,7 @@ export interface ProviderResult {
     inputTokens: number;
     outputTokens: number;
   };
+  rawForCapture?: string;
 }
 
 export interface Provider {
@@ -17,4 +18,3 @@ export interface Provider {
     signal?: AbortSignal;
   }): Promise<ProviderResult>;
 }
-

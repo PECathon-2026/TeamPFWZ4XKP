@@ -118,11 +118,51 @@ async function executeStep(tabId: number) {
     activeRun.status = "snapshotting";
     broadcastState(tabId);
 
-    // 1. Request Snapshot from Content Script
-    const snapshotRes = await chrome.tabs.sendMessage(tabId, {
-      type: "SNAPSHOT",
-      snapshotVersion: activeRun.snapshotVersion,
-    });
+    // 0. Tab safety check
+    const currentTab = await chrome.tabs.get(tabId);
+    const tabUrl = currentTab.url || "";
+    if (
+      tabUrl.startsWith("chrome://") ||
+      tabUrl.startsWith("chrome-extension://") ||
+      tabUrl.startsWith("edge://") ||
+      tabUrl.startsWith("about:")
+    ) {
+      activeRun.status = "failed";
+      activeRun.lastBlockedReason =
+        "PrivacyLens cannot run on browser internal pages (" +
+        tabUrl.slice(0, 30) +
+        "). Please open a real website (e.g. an e-commerce or login page) and run your task there.";
+      broadcastState(tabId);
+      return;
+    }
+
+    // 1. Request Snapshot from Content Script (with auto-inject fallback)
+    let snapshotRes: any;
+    try {
+      snapshotRes = await chrome.tabs.sendMessage(tabId, {
+        type: "SNAPSHOT",
+        snapshotVersion: activeRun.snapshotVersion,
+      });
+    } catch {
+      // Content script not yet injected into this tab; inject it dynamically!
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId },
+          files: ["dist/content.js"],
+        });
+        await new Promise((r) => setTimeout(r, 150));
+        snapshotRes = await chrome.tabs.sendMessage(tabId, {
+          type: "SNAPSHOT",
+          snapshotVersion: activeRun.snapshotVersion,
+        });
+      } catch (err: any) {
+        activeRun.status = "failed";
+        activeRun.lastBlockedReason =
+          "Could not connect to this page. Please refresh the page and try again.";
+        broadcastState(tabId);
+        return;
+      }
+    }
 
     if (!snapshotRes || !snapshotRes.rawTree) {
       activeRun.status = "failed";
@@ -135,12 +175,13 @@ async function executeStep(tabId: number) {
     activeRun.status = "sanitizing";
     broadcastState(tabId);
 
-    const currentTab = await chrome.tabs.get(tabId);
     const currentDomain = currentTab.url ? new URL(currentTab.url).hostname : undefined;
-    const storageData = await chrome.storage.local.get(["customRules", "gatewayUrl", "authToken"]);
+    const storageData = await chrome.storage.local.get(["customRules", "gatewayUrl", "authToken", "provider", "modelName"]);
     const customRules = storageData.customRules || [];
     const effectiveGatewayUrl = storageData.gatewayUrl || GATEWAY_URL;
     const effectiveAuthToken = storageData.authToken || AUTH_TOKEN;
+    const effectiveProvider = storageData.provider || "nemotron";
+    const effectiveModel = storageData.modelName || "nvidia/llama-3.1-nemotron-70b-instruct";
 
     const { sanitizedTree, ledger, rawValuesMap } = sanitizeDOMTree(
       snapshotRes.rawTree,
@@ -179,6 +220,8 @@ async function executeStep(tabId: number) {
     const gateResult = await sendThroughGate(candidateEnvelope, rawSensitiveStrings, {
       gatewayUrl: effectiveGatewayUrl,
       authToken: effectiveAuthToken,
+      provider: effectiveProvider,
+      model: effectiveModel,
     });
 
     if (!gateResult.allowed || !gateResult.response) {
@@ -240,7 +283,16 @@ async function executeStep(tabId: number) {
     const activeRun = activeRuns.get(tabId);
     if (activeRun) {
       activeRun.status = "failed";
-      activeRun.lastBlockedReason = `Unexpected error: ${err instanceof Error ? err.message : "Unknown"}`;
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (
+        errMsg.includes("Receiving end does not exist") ||
+        errMsg.includes("Could not establish connection")
+      ) {
+        activeRun.lastBlockedReason =
+          "PrivacyLens cannot interact with this tab. Please refresh the page or navigate to a real website (http/https).";
+      } else {
+        activeRun.lastBlockedReason = errMsg;
+      }
       activeRun.logs.push({
         stepNumber: activeRun.stepNumber,
         snapshotVersion: activeRun.snapshotVersion,
@@ -307,8 +359,7 @@ async function dispatchExecution(action: Action, fingerprint: unknown, tabId: nu
 // Intra-extension message routing
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "START") {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tabId = tabs[0]?.id;
+    const handleStart = (tabId?: number) => {
       if (tabId) {
         activeRuns.set(tabId, {
           task: message.task,
@@ -320,7 +371,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
         executeStep(tabId).catch(console.error);
       }
-    });
+    };
+
+    if (message.tabId) {
+      handleStart(message.tabId);
+    } else {
+      chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+        handleStart(tabs[0]?.id);
+      });
+    }
     sendResponse({ ok: true });
     return true;
   }

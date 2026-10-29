@@ -86,14 +86,37 @@ async function loadSettings() {
   ]);
 
   if (data.gatewayUrl) gatewayUrlInput.value = data.gatewayUrl;
-  if (data.provider) providerSelect.value = data.provider;
-  if (data.modelName) modelNameInput.value = data.modelName;
+  if (data.provider) {
+    providerSelect.value = data.provider;
+  } else {
+    providerSelect.value = "nemotron";
+  }
+  if (data.modelName) {
+    modelNameInput.value = data.modelName;
+  } else {
+    modelNameInput.value = "nvidia/llama-3.1-nemotron-70b-instruct";
+  }
   if (data.authToken) authTokenInput.value = data.authToken;
 
   currentRules = data.customRules || [];
   renderRulesTable();
   renderVaultTable(data.vaultSecrets || []);
 }
+
+// Auto-fill suggested model when provider changes
+providerSelect.addEventListener("change", () => {
+  const defaults: Record<string, string> = {
+    nemotron: "nvidia/llama-3.1-nemotron-70b-instruct",
+    anthropic: "claude-3-5-sonnet-20241022",
+    openai: "gpt-4o-mini",
+    "openai-compatible": "gpt-4o-mini",
+    ollama: "llama3.2",
+    mock: "mock-v1",
+  };
+  if (defaults[providerSelect.value]) {
+    modelNameInput.value = defaults[providerSelect.value];
+  }
+});
 
 // 2. Save Gateway Settings
 saveGatewayBtn.addEventListener("click", async () => {
@@ -115,7 +138,7 @@ testConnBtn.addEventListener("click", async () => {
     const res = await fetch(`${gatewayUrlInput.value.trim()}/healthz`);
     if (res.ok) {
       const json = await res.json();
-      connResult.textContent = `✓ Connected successfully: ${json.service} v${json.version} (Status: ${json.status})`;
+      connResult.textContent = `✓ Connected successfully: ${json.service} v${json.version} (Active Reasoner: ${json.provider || "nemotron"}, Model: ${json.model || "default"}, Status: ${json.status})`;
       connResult.style.color = "#10b981";
     } else {
       connResult.textContent = `✗ Gateway returned HTTP ${res.status}`;
