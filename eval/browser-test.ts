@@ -22,9 +22,16 @@ interface ScenarioTestConfig {
 
 const SCENARIOS: ScenarioTestConfig[] = [
   {
-    id: "Hub",
-    name: "Interactive Demo Hub",
+    id: "Landing",
+    name: "Product Landing Page",
     url: "http://127.0.0.1:8787/",
+    expectedSelectors: ["#playground", "#play-input", ".proof-bar", ".bento-grid"],
+    screenshotName: "00-product-landing.png",
+  },
+  {
+    id: "Hub",
+    name: "Interactive Benchmark Hub",
+    url: "http://127.0.0.1:8787/hub",
     expectedSelectors: [".metrics-bar", ".grid", "a[href='/demo']"],
     screenshotName: "00-demo-hub.png",
   },

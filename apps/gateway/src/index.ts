@@ -21,8 +21,23 @@ app.get("/healthz", (c) => {
   return c.json({ status: "ok", version: "0.1.0", service: "privacylens-gateway" });
 });
 
-// Demo Hub Homepage served over HTTP
+// Product Landing Page served over HTTP
 app.get("/", (c) => {
+  const candidates = [
+    path.resolve(process.cwd(), "eval/landing-page.html"),
+    path.resolve(process.cwd(), "../../eval/landing-page.html"),
+    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/landing-page.html"),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      return c.html(fs.readFileSync(p, "utf-8"));
+    }
+  }
+  return c.text("Landing page not found", 404);
+});
+
+// Demo Hub Homepage served over HTTP
+app.get("/hub", (c) => {
   const candidates = [
     path.resolve(process.cwd(), "eval/demo-hub.html"),
     path.resolve(process.cwd(), "../../eval/demo-hub.html"),
@@ -34,6 +49,19 @@ app.get("/", (c) => {
     }
   }
   return c.text("Demo hub not found", 404);
+});
+
+// Download production extension zip archive
+app.get("/download", (c) => {
+  const zipPath = path.resolve(process.cwd(), "release/privacylens-extension-v0.1.0.zip");
+  if (fs.existsSync(zipPath)) {
+    const data = fs.readFileSync(zipPath);
+    return c.body(data, 200, {
+      "Content-Type": "application/zip",
+      "Content-Disposition": 'attachment; filename="privacylens-extension-v0.1.0.zip"',
+    });
+  }
+  return c.text("Release zip not found. Run npm run package first.", 404);
 });
 
 // Demo Page served over HTTP
