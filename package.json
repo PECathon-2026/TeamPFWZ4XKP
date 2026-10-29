@@ -10,11 +10,13 @@
   "scripts": {
     "build": "npm run --workspaces --if-present build",
     "test": "vitest run",
+    "test:browser": "tsx eval/browser-test.ts",
     "eval": "tsx eval/runner/index.ts",
     "gateway": "npm --workspace=@privacylens/gateway run dev"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
+    "puppeteer-core": "^25.16.0",
     "tsx": "^4.19.1",
     "typescript": "^5.5.4",
     "vitest": "^2.1.3"
