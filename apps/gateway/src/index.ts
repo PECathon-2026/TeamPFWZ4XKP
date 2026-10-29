@@ -14,7 +14,7 @@ const app = new Hono();
 const provider = getProvider();
 
 const PORT = parseInt(process.env.PORT || "8787", 10);
-const VALID_DEV_TOKEN = "dev_privacylens_token_001";
+const isDev = process.env.NODE_ENV !== "production";
 
 // 1. Health check
 app.get("/healthz", (c) => {
@@ -26,7 +26,6 @@ app.get("/", (c) => {
   const candidates = [
     path.resolve(process.cwd(), "eval/landing-page.html"),
     path.resolve(process.cwd(), "../../eval/landing-page.html"),
-    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/landing-page.html"),
   ];
   for (const p of candidates) {
     if (fs.existsSync(p)) {
@@ -36,20 +35,106 @@ app.get("/", (c) => {
   return c.text("Landing page not found", 404);
 });
 
-// Demo Hub Homepage served over HTTP
-app.get("/hub", (c) => {
-  const candidates = [
-    path.resolve(process.cwd(), "eval/demo-hub.html"),
-    path.resolve(process.cwd(), "../../eval/demo-hub.html"),
-    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/demo-hub.html"),
-  ];
-  for (const p of candidates) {
-    if (fs.existsSync(p)) {
-      return c.html(fs.readFileSync(p, "utf-8"));
+// Demo routes — only available in development mode
+if (isDev) {
+  // Demo Hub Homepage served over HTTP
+  app.get("/hub", (c) => {
+    const candidates = [
+      path.resolve(process.cwd(), "eval/demo-hub.html"),
+      path.resolve(process.cwd(), "../../eval/demo-hub.html"),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return c.html(fs.readFileSync(p, "utf-8"));
+      }
     }
-  }
-  return c.text("Demo hub not found", 404);
-});
+    return c.text("Demo hub not found", 404);
+  });
+
+  // Demo Page served over HTTP
+  app.get("/demo", (c) => {
+    const candidates = [
+      path.resolve(process.cwd(), "eval/demo-page.html"),
+      path.resolve(process.cwd(), "../../eval/demo-page.html"),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return c.html(fs.readFileSync(p, "utf-8"));
+      }
+    }
+    return c.text("Demo page not found", 404);
+  });
+
+  // Liquid Glass Navbar Dedicated Demo Page
+  app.get("/navbar", (c) => {
+    const candidates = [
+      path.resolve(process.cwd(), "eval/demo-navbar.html"),
+      path.resolve(process.cwd(), "../../eval/demo-navbar.html"),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return c.html(fs.readFileSync(p, "utf-8"));
+      }
+    }
+    return c.text("Navbar demo page not found", 404);
+  });
+
+  // Scenario S2: Auth & OTP Page
+  app.get("/auth", (c) => {
+    const candidates = [
+      path.resolve(process.cwd(), "eval/demo-auth.html"),
+      path.resolve(process.cwd(), "../../eval/demo-auth.html"),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return c.html(fs.readFileSync(p, "utf-8"));
+      }
+    }
+    return c.text("Auth page not found", 404);
+  });
+
+  // Scenario S4: Video Conferencing Page
+  app.get("/video", (c) => {
+    const candidates = [
+      path.resolve(process.cwd(), "eval/demo-video.html"),
+      path.resolve(process.cwd(), "../../eval/demo-video.html"),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return c.html(fs.readFileSync(p, "utf-8"));
+      }
+    }
+    return c.text("Video demo page not found", 404);
+  });
+
+  // Scenario S3: Customer Support KYC Page
+  app.get("/support", (c) => {
+    const candidates = [
+      path.resolve(process.cwd(), "eval/demo-support.html"),
+      path.resolve(process.cwd(), "../../eval/demo-support.html"),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return c.html(fs.readFileSync(p, "utf-8"));
+      }
+    }
+    return c.text("Support demo page not found", 404);
+  });
+
+  // Scenario S5: Developer Settings Page
+  app.get("/dev", (c) => {
+    const candidates = [
+      path.resolve(process.cwd(), "eval/demo-dev.html"),
+      path.resolve(process.cwd(), "../../eval/demo-dev.html"),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return c.html(fs.readFileSync(p, "utf-8"));
+      }
+    }
+    return c.text("Developer demo page not found", 404);
+  });
+}
 
 // Download production extension zip archive
 app.get("/download", (c) => {
@@ -64,85 +149,10 @@ app.get("/download", (c) => {
   return c.text("Release zip not found. Run npm run package first.", 404);
 });
 
-// Demo Page served over HTTP
-app.get("/demo", (c) => {
-  const candidates = [
-    path.resolve(process.cwd(), "eval/demo-page.html"),
-    path.resolve(process.cwd(), "../../eval/demo-page.html"),
-    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/demo-page.html"),
-  ];
-  for (const p of candidates) {
-    if (fs.existsSync(p)) {
-      return c.html(fs.readFileSync(p, "utf-8"));
-    }
-  }
-  return c.text("Demo page not found", 404);
-});
-
-// Scenario S2: Auth & OTP Page
-app.get("/auth", (c) => {
-  const candidates = [
-    path.resolve(process.cwd(), "eval/demo-auth.html"),
-    path.resolve(process.cwd(), "../../eval/demo-auth.html"),
-    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/demo-auth.html"),
-  ];
-  for (const p of candidates) {
-    if (fs.existsSync(p)) {
-      return c.html(fs.readFileSync(p, "utf-8"));
-    }
-  }
-  return c.text("Auth page not found", 404);
-});
-
-// Scenario S4: Video Conferencing Page
-app.get("/video", (c) => {
-  const candidates = [
-    path.resolve(process.cwd(), "eval/demo-video.html"),
-    path.resolve(process.cwd(), "../../eval/demo-video.html"),
-    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/demo-video.html"),
-  ];
-  for (const p of candidates) {
-    if (fs.existsSync(p)) {
-      return c.html(fs.readFileSync(p, "utf-8"));
-    }
-  }
-  return c.text("Video demo page not found", 404);
-});
-
-// Scenario S3: Customer Support KYC Page
-app.get("/support", (c) => {
-  const candidates = [
-    path.resolve(process.cwd(), "eval/demo-support.html"),
-    path.resolve(process.cwd(), "../../eval/demo-support.html"),
-    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/demo-support.html"),
-  ];
-  for (const p of candidates) {
-    if (fs.existsSync(p)) {
-      return c.html(fs.readFileSync(p, "utf-8"));
-    }
-  }
-  return c.text("Support demo page not found", 404);
-});
-
-// Scenario S5: Developer Settings Page
-app.get("/dev", (c) => {
-  const candidates = [
-    path.resolve(process.cwd(), "eval/demo-dev.html"),
-    path.resolve(process.cwd(), "../../eval/demo-dev.html"),
-    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/eval/demo-dev.html"),
-  ];
-  for (const p of candidates) {
-    if (fs.existsSync(p)) {
-      return c.html(fs.readFileSync(p, "utf-8"));
-    }
-  }
-  return c.text("Developer demo page not found", 404);
-});
-
 // 2. Auth registration
 app.post("/v1/auth/register", (c) => {
   return c.json({
-    accessToken: VALID_DEV_TOKEN,
+    accessToken: crypto.randomUUID(),
     tokenType: "Bearer",
     expiresIn: 3600,
   });
@@ -153,6 +163,12 @@ app.post("/v1/agent/step", async (c) => {
   const authHeader = c.req.header("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return c.json({ code: "UNAUTHENTICATED", message: "Missing or invalid Bearer token" }, 401);
+  }
+
+  const token = authHeader.slice("Bearer ".length).trim();
+  const expectedToken = process.env.GATEWAY_AUTH_TOKEN || "";
+  if (expectedToken && token !== expectedToken) {
+    return c.json({ code: "UNAUTHENTICATED", message: "Invalid token" }, 401);
   }
 
   let body: unknown;
@@ -197,7 +213,6 @@ app.post("/v1/agent/step", async (c) => {
   const candidatePromptPaths = [
     path.resolve(process.cwd(), "apps/gateway/prompts/system.v1.md"),
     path.resolve(process.cwd(), "prompts/system.v1.md"),
-    path.resolve("c:/Saumya_workspace/Team-PF-WZ4XKP/apps/gateway/prompts/system.v1.md"),
   ];
   for (const p of candidatePromptPaths) {
     if (fs.existsSync(p)) {

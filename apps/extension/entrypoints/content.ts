@@ -52,6 +52,21 @@ function buildDOMSnapshot(element: HTMLElement, idCounter = { val: 0 }): DOMNode
     }
   }
 
+  // For input elements, read the live .value property (not the stale 'value' HTML attribute)
+  if (tagName === "input" && (element as HTMLInputElement).type !== "password") {
+    const liveValue = (element as HTMLInputElement).value;
+    if (liveValue) {
+      attributes["value"] = liveValue;
+    }
+  }
+  // For textarea elements too
+  if (tagName === "textarea") {
+    const liveValue = (element as HTMLTextAreaElement).value;
+    if (liveValue) {
+      attributes["value"] = liveValue;
+    }
+  }
+
   // Check interactive
   const isInteractive =
     tagName === "button" ||
@@ -153,7 +168,20 @@ function renderPrivacyOverlay() {
     </style>
   `;
 
-  const selector = 'input[type="password"], input[autocomplete*="cc-"], input#cardNumber, input#pan, input#phone, input#email';
+  const selector = [
+    'input[type="password"]',
+    'input[autocomplete*="cc-"]',
+    'input[autocomplete="cc-number"]',
+    'input[autocomplete="cc-csc"]',
+    'input[autocomplete="cc-exp"]',
+    'input[name*="card"]',
+    'input[name*="cvv"]',
+    'input[name*="cvc"]',
+    'input[name*="pan"]',
+    'input[id*="card"]',
+    'input[id*="cvv"]',
+    'input[id*="cvc"]',
+  ].join(", ");
   const inputs = document.querySelectorAll<HTMLElement>(selector);
   inputs.forEach((el) => {
     const rect = el.getBoundingClientRect();

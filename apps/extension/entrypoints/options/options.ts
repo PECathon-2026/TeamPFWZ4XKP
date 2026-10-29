@@ -48,29 +48,8 @@ const resetBtn = document.getElementById("reset-btn") as HTMLButtonElement;
 let currentRules: UserRule[] = [];
 let vaultUnlocked = false;
 
-// Default rules for demo
-const DEFAULT_RULES: UserRule[] = [
-  {
-    id: "rule_demo_emp",
-    name: "Internal Employee ID",
-    type: "regex",
-    pattern: "\\bEMP-\\d{6}\\b",
-    category: "CUSTOM",
-    domainPattern: "",
-    description: "Matches internal employee badge ID",
-    enabled: true,
-  },
-  {
-    id: "rule_demo_conf",
-    name: "Confidential Data Tag",
-    type: "css_selector",
-    pattern: ".confidential",
-    category: "CUSTOM",
-    domainPattern: "",
-    description: "Redacts any element marked with .confidential class",
-    enabled: true,
-  },
-];
+// Start empty; users add their own rules
+const DEFAULT_RULES: UserRule[] = [];
 
 // Switch Tabs
 tabBtns.forEach((btn) => {
@@ -111,7 +90,7 @@ async function loadSettings() {
   if (data.modelName) modelNameInput.value = data.modelName;
   if (data.authToken) authTokenInput.value = data.authToken;
 
-  currentRules = data.customRules && data.customRules.length > 0 ? data.customRules : [...DEFAULT_RULES];
+  currentRules = data.customRules || [];
   renderRulesTable();
   renderVaultTable(data.vaultSecrets || []);
 }
@@ -372,8 +351,8 @@ resetBtn.addEventListener("click", async () => {
       gatewayUrl: "http://127.0.0.1:8787",
       provider: "mock",
       modelName: "mock-v1",
-      authToken: "dev_privacylens_token_001",
-      customRules: DEFAULT_RULES,
+      authToken: "",
+      customRules: [],
     });
     await loadSettings();
     showToast("Reset to defaults completed.");

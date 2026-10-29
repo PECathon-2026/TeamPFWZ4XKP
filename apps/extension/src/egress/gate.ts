@@ -13,7 +13,21 @@ export interface GateConfig {
   redTeamSimulateCanary?: boolean;
 }
 
-const ALLOWED_DESTINATIONS = ["http://127.0.0.1:8787", "http://127.0.0.1:11434"];
+function isAllowedGatewayUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    // Allow localhost HTTP or any HTTPS
+    if (parsed.protocol === "https:") return true;
+    if (
+      parsed.protocol === "http:" &&
+      (parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost")
+    )
+      return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * The SINGLE egress chokepoint for the extension (FR-D1).
@@ -36,9 +50,7 @@ export async function sendThroughGate(
   const envelope = schemaCheck.data;
 
   // 2. Destination Allowlist
-  const isAllowedHost = ALLOWED_DESTINATIONS.some((dest) =>
-    config.gatewayUrl.startsWith(dest)
-  );
+  const isAllowedHost = isAllowedGatewayUrl(config.gatewayUrl);
   if (!isAllowedHost) {
     return {
       allowed: false,
@@ -75,7 +87,16 @@ export async function sendThroughGate(
     };
   }
 
-  // 5. Transmit (Single network call point)
+  // 5. Auth token check
+  if (!config.authToken || config.authToken.trim() === "") {
+    return {
+      allowed: false,
+      blockedReason:
+        "GATE_NO_AUTH_TOKEN: No authentication token configured. Please set one in extension Options.",
+    };
+  }
+
+  // 6. Transmit (Single network call point)
   try {
     const res = await fetch(`${config.gatewayUrl}/v1/agent/step`, {
       method: "POST",

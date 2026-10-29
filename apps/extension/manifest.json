@@ -33,6 +33,6 @@
     "open_in_tab": true
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' http://127.0.0.1:8787 http://127.0.0.1:11434"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' http://127.0.0.1:8787 http://127.0.0.1:11434 https:"
   }
 }

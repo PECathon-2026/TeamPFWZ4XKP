@@ -10,8 +10,10 @@ openPanelBtn.addEventListener("click", async () => {
   }
 });
 
-openHubBtn.addEventListener("click", () => {
-  chrome.tabs.create({ url: "http://127.0.0.1:8787/" });
+openHubBtn.addEventListener("click", async () => {
+  const data = await chrome.storage.local.get(["gatewayUrl"]);
+  const url = data.gatewayUrl || "http://127.0.0.1:8787";
+  chrome.tabs.create({ url: `${url}/` });
   window.close();
 });
 

@@ -28,7 +28,8 @@ async function captureLandingPage() {
 
   const page = await browser.newPage();
   console.log("Navigating to http://127.0.0.1:8787/ ...");
-  await page.goto("http://127.0.0.1:8787/", { waitUntil: "networkidle0", timeout: 15000 });
+  await page.goto("http://127.0.0.1:8787/", { waitUntil: "domcontentloaded", timeout: 15000 });
+  await new Promise(r => setTimeout(r, 1200)); // allow WebGL and fonts to initialize
 
   // 1. Capture hero & playground
   const heroPath = path.join(ARTIFACT_DIR, "00-product-landing.png");

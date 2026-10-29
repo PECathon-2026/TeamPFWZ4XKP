@@ -10,8 +10,6 @@ import { validateAction } from "../src/validator/index.js";
 import { SecretVault } from "../src/vault/index.js";
 
 const vault = new SecretVault();
-// Pre-populate demo secret in vault for local injection demo
-vault.addSecret("card.number", "CARD", "4111-1111-1111-1111", "demoPass123").catch(console.error);
 
 interface ActiveRunState {
   task: string;
@@ -24,7 +22,7 @@ interface ActiveRunState {
 
 let activeRun: ActiveRunState | null = null;
 const GATEWAY_URL = "http://127.0.0.1:8787";
-const AUTH_TOKEN = "dev_privacylens_token_001";
+const AUTH_TOKEN = "";
 
 // Open sidepanel on extension icon click
 chrome.sidePanel
@@ -86,10 +84,11 @@ export async function maskScreenshot(imageDataUrl: string, regions: any[]): Prom
 async function executeStep() {
   if (!activeRun || activeRun.status === "stopped" || activeRun.status === "done") return;
 
-  activeRun.stepNumber++;
-  activeRun.snapshotVersion++;
-  activeRun.status = "snapshotting";
-  broadcastState();
+  try {
+    activeRun.stepNumber++;
+    activeRun.snapshotVersion++;
+    activeRun.status = "snapshotting";
+    broadcastState();
 
   // 1. Request Snapshot from Content Script
   const snapshotRes = await chrome.tabs.sendMessage(activeRun.tabId, {
@@ -145,7 +144,7 @@ async function executeStep() {
     type: "PREVIEW",
     outboundPayload: candidateEnvelope,
     ledger,
-  });
+  }).catch(() => {}); // Ignore if sidepanel is closed
 
   const gateResult = await sendThroughGate(candidateEnvelope, rawSensitiveStrings, {
     gatewayUrl: effectiveGatewayUrl,
@@ -197,12 +196,25 @@ async function executeStep() {
       action: proposedAction,
       fingerprint: valResult.fingerprint,
       actionHash: valResult.actionHash,
-    });
+    }).catch(() => {}); // Ignore if sidepanel is closed
     return; // Wait for APPROVAL_DECISION from side panel
   }
 
-  // 6. Execute Validated Action
-  await dispatchExecution(proposedAction, valResult.fingerprint);
+    // 6. Execute Validated Action
+    await dispatchExecution(proposedAction, valResult.fingerprint);
+  } catch (err: unknown) {
+    if (activeRun) {
+      activeRun.status = "failed";
+      activeRun.logs.push({
+        stepNumber: activeRun.stepNumber,
+        snapshotVersion: activeRun.snapshotVersion,
+        status: "failed",
+        redactionCounts: {},
+        timestamp: Date.now(),
+      });
+      broadcastState();
+    }
+  }
 }
 
 async function dispatchExecution(action: Action, fingerprint: unknown) {
@@ -240,8 +252,14 @@ async function dispatchExecution(action: Action, fingerprint: unknown) {
   });
 
   // Schedule next step if still running and under step limit
-  if (activeRun.stepNumber < 15 && (activeRun.status as string) !== "done") {
-    setTimeout(executeStep, 500);
+  if (!execRes?.ok) {
+    activeRun.status = "failed";
+    broadcastState();
+    return;
+  }
+
+  if (activeRun.stepNumber < 15) {
+    setTimeout(() => executeStep().catch(console.error), 500);
   } else {
     activeRun.status = "done";
     broadcastState();
@@ -256,7 +274,7 @@ function broadcastState() {
     step: activeRun.stepNumber,
     totalSteps: 15,
     logs: activeRun.logs,
-  });
+  }).catch(() => {}); // Ignore if sidepanel is closed
 }
 
 // Intra-extension message routing
@@ -272,7 +290,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           snapshotVersion: 0,
           logs: [],
         };
-        executeStep();
+        executeStep().catch(console.error);
       }
     });
     sendResponse({ ok: true });
