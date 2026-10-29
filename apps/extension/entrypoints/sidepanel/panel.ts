@@ -140,12 +140,17 @@ runBtn.addEventListener("click", async () => {
     return;
   }
 
-  // Get current active tab ID
+  // Get current active tab ID in this window
   let targetTabId = currentTabId;
   try {
-    const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-    if (tabs[0]?.id) {
-      targetTabId = tabs[0].id;
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      targetTabId = tab.id;
+    } else {
+      const [fallbackTab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      if (fallbackTab?.id) {
+        targetTabId = fallbackTab.id;
+      }
     }
   } catch {
     // Fall back to currentTabId

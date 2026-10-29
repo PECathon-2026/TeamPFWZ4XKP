@@ -133,6 +133,33 @@ if (isDev) {
     return c.text("Auth page not found", 404);
   });
 
+  app.post("/auth/verify-otp", async (c) => {
+    return c.html(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Login Successful</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 500px; margin: 60px auto; padding: 32px; background: #f0fdf4; color: #166534; text-align: center; border-radius: 16px; border: 1px solid #bbf7d0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+          h1 { font-size: 24px; margin-bottom: 8px; color: #15803d; }
+          p { font-size: 15px; color: #166534; line-height: 1.5; }
+          .badge { display: inline-block; background: #dcfce7; color: #15803d; font-weight: 700; padding: 6px 14px; border-radius: 9999px; margin-top: 16px; font-size: 13px; }
+          .shield-note { margin-top: 24px; padding: 12px; background: #ffffff; border: 1px solid #86efac; border-radius: 8px; font-size: 13px; color: #374151; }
+        </style>
+      </head>
+      <body>
+        <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
+        <h1>Authentication Successful!</h1>
+        <p>You have securely verified your 2FA token and signed in.</p>
+        <div class="badge">Logged in as: alice.customer@example.com</div>
+        <div class="shield-note">
+          🛡️ <strong>Zero Credential Leakage:</strong> Your account password and OTP code never left your device unredacted.
+        </div>
+      </body>
+      </html>
+    `);
+  });
+
   // Scenario S4: Video Conferencing Page
   app.get("/video", (c) => {
     const candidates = [

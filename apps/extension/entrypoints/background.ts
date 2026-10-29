@@ -131,42 +131,117 @@ async function executeStep(tabId: number) {
       activeRun.lastBlockedReason =
         "PrivacyLens cannot run on browser internal pages (" +
         tabUrl.slice(0, 30) +
-        "). Please open a real website (e.g. an e-commerce or login page) and run your task there.";
+        "). Please open a real website (e.g. http://127.0.0.1:8787 or an e-commerce page) and run your task there.";
       broadcastState(tabId);
       return;
     }
 
-    // 1. Request Snapshot from Content Script (with auto-inject fallback)
-    let snapshotRes: any;
-    try {
-      snapshotRes = await chrome.tabs.sendMessage(tabId, {
-        type: "SNAPSHOT",
-        snapshotVersion: activeRun.snapshotVersion,
-      });
-    } catch {
-      // Content script not yet injected into this tab; inject it dynamically!
-      try {
-        await chrome.scripting.executeScript({
-          target: { tabId },
-          files: ["dist/content.js"],
-        });
-        await new Promise((r) => setTimeout(r, 150));
-        snapshotRes = await chrome.tabs.sendMessage(tabId, {
-          type: "SNAPSHOT",
-          snapshotVersion: activeRun.snapshotVersion,
-        });
-      } catch (err: any) {
+    if (tabUrl.startsWith("file://")) {
+      const isAllowedFile = await chrome.extension.isAllowedFileSchemeAccess();
+      if (!isAllowedFile) {
         activeRun.status = "failed";
         activeRun.lastBlockedReason =
-          "Could not connect to this page. Please refresh the page and try again.";
+          "To use PrivacyLens on local file:/// pages, enable 'Allow access to file URLs' on the PrivacyLens card in chrome://extensions. Or, open http://127.0.0.1:8787 in your browser.";
         broadcastState(tabId);
         return;
       }
     }
 
-    if (!snapshotRes || !snapshotRes.rawTree) {
+    // 1. Request Snapshot from Content Script (with dual-path direct fallback)
+    let rawTree: any = null;
+    try {
+      const snapshotRes = await chrome.tabs.sendMessage(tabId, {
+        type: "SNAPSHOT",
+        snapshotVersion: activeRun.snapshotVersion,
+      });
+      if (snapshotRes && snapshotRes.rawTree) {
+        rawTree = snapshotRes.rawTree;
+      }
+    } catch {
+      // Content script messaging failed; fall through to direct injection
+    }
+
+    // Secondary Direct Fallback: Inject self-contained extractor directly into live DOM
+    if (!rawTree) {
+      try {
+        const [execResult] = await chrome.scripting.executeScript({
+          target: { tabId },
+          func: () => {
+            const ALLOWED = new Set([
+              "body", "main", "section", "article", "header", "footer", "nav",
+              "a", "button", "input", "select", "textarea", "form",
+              "label", "p", "span", "div", "h1", "h2", "h3", "h4",
+              "h5", "h6", "table", "tr", "td", "th", "ul", "ol", "li", "code"
+            ]);
+            let idCounter = 0;
+            const walk = (el: Element): any => {
+              if (!el) return null;
+              const tag = el.tagName ? el.tagName.toLowerCase() : "";
+              if (!ALLOWED.has(tag)) return null;
+              try {
+                const style = window.getComputedStyle(el);
+                if (style && (style.display === "none" || style.visibility === "hidden")) return null;
+              } catch {}
+
+              const id = el.id ? el.id : `node_${idCounter++}`;
+              const attrs: Record<string, string> = {};
+              if (el.attributes) {
+                for (const a of Array.from(el.attributes)) {
+                  if (tag === "input" && a.name === "value" && (el as HTMLInputElement).type === "password") continue;
+                  attrs[a.name] = a.value;
+                }
+              }
+              if (tag === "input" && (el as HTMLInputElement).type !== "password") {
+                if ((el as HTMLInputElement).value) attrs["value"] = (el as HTMLInputElement).value;
+              }
+              if (tag === "textarea" && (el as HTMLTextAreaElement).value) {
+                attrs["value"] = (el as HTMLTextAreaElement).value;
+              }
+              if (tag === "select" && (el as HTMLSelectElement).value) {
+                attrs["value"] = (el as HTMLSelectElement).value;
+              }
+
+              const children: any[] = [];
+              const elChildren = el.children || [];
+              for (let i = 0; i < elChildren.length; i++) {
+                const childNode = walk(elChildren[i]);
+                if (childNode) children.push(childNode);
+              }
+
+              let text = "";
+              const childNodes = el.childNodes || [];
+              for (let i = 0; i < childNodes.length; i++) {
+                const n = childNodes[i];
+                if (n && n.nodeType === 3 && n.textContent) text += n.textContent.trim() + " ";
+              }
+
+              return {
+                id,
+                tag,
+                role: el.getAttribute("role") || undefined,
+                name: el.getAttribute("aria-label") || attrs["name"] || undefined,
+                text: text.trim() || undefined,
+                attributes: attrs,
+                children,
+                isInteractive: tag === "button" || tag === "input" || tag === "a" || tag === "select" || tag === "textarea",
+              };
+            };
+            const target = document.body || document.documentElement;
+            return target ? walk(target) : null;
+          },
+        });
+        if (execResult && execResult.result) {
+          rawTree = execResult.result;
+        }
+      } catch (err: any) {
+        console.warn("[PrivacyLens] Direct script injection fallback failed:", err);
+      }
+    }
+
+    if (!rawTree) {
       activeRun.status = "failed";
-      activeRun.lastBlockedReason = "Could not read page content. Make sure the page is fully loaded.";
+      activeRun.lastBlockedReason =
+        "Could not read page content. If this is a newly opened tab or local file, refresh the page and try again.";
       broadcastState(tabId);
       return;
     }
@@ -175,7 +250,13 @@ async function executeStep(tabId: number) {
     activeRun.status = "sanitizing";
     broadcastState(tabId);
 
-    const currentDomain = currentTab.url ? new URL(currentTab.url).hostname : undefined;
+    let currentDomain: string | undefined;
+    try {
+      if (currentTab.url && !currentTab.url.startsWith("file:")) {
+        currentDomain = new URL(currentTab.url).hostname;
+      }
+    } catch {}
+
     const storageData = await chrome.storage.local.get(["customRules", "gatewayUrl", "authToken", "provider", "modelName"]);
     const customRules = storageData.customRules || [];
     const effectiveGatewayUrl = storageData.gatewayUrl || GATEWAY_URL;
@@ -184,7 +265,7 @@ async function executeStep(tabId: number) {
     const effectiveModel = storageData.modelName || "nvidia/llama-3.1-nemotron-70b-instruct";
 
     const { sanitizedTree, ledger, rawValuesMap } = sanitizeDOMTree(
-      snapshotRes.rawTree,
+      rawTree,
       new Map(),
       {},
       customRules,
@@ -323,12 +404,63 @@ async function dispatchExecution(action: Action, fingerprint: unknown, tabId: nu
     vaultSecretValue = vault.getSecret(action.secretRef);
   }
 
-  const execRes = await chrome.tabs.sendMessage(tabId, {
-    type: "EXECUTE",
-    action,
-    fingerprint,
-    vaultSecretValue,
-  });
+  let execRes: any = null;
+  try {
+    execRes = await chrome.tabs.sendMessage(tabId, {
+      type: "EXECUTE",
+      action,
+      fingerprint,
+      vaultSecretValue,
+    });
+  } catch {
+    // Direct execution fallback via chrome.scripting
+    try {
+      const [scriptRes] = await chrome.scripting.executeScript({
+        target: { tabId },
+        func: (act: any, secretVal: any) => {
+          const targetEl = act.targetId ? document.getElementById(act.targetId) : null;
+          if (!targetEl && act.targetId) return { ok: false, reasonCode: "ELEMENT_STALE_OR_MISSING" };
+          try {
+            if (act.type === "click" && targetEl) {
+              if (targetEl instanceof HTMLInputElement && (targetEl.type === "checkbox" || targetEl.type === "radio")) {
+                targetEl.checked = !targetEl.checked;
+                targetEl.dispatchEvent(new Event("change", { bubbles: true }));
+              }
+              targetEl.focus?.();
+              targetEl.click();
+            } else if (act.type === "type" && targetEl) {
+              const text = secretVal || act.value || "";
+              if (targetEl instanceof HTMLInputElement || targetEl instanceof HTMLTextAreaElement) {
+                targetEl.focus();
+                targetEl.value = text;
+                targetEl.dispatchEvent(new Event("input", { bubbles: true }));
+                targetEl.dispatchEvent(new Event("change", { bubbles: true }));
+              }
+            } else if (act.type === "select" && targetEl instanceof HTMLSelectElement) {
+              const val = act.value || "";
+              targetEl.focus();
+              for (let i = 0; i < targetEl.options.length; i++) {
+                if (targetEl.options[i].value === val || targetEl.options[i].text.toLowerCase().includes(val.toLowerCase())) {
+                  targetEl.selectedIndex = i;
+                  break;
+                }
+              }
+              targetEl.dispatchEvent(new Event("change", { bubbles: true }));
+            } else if (act.type === "scroll") {
+              window.scrollBy({ top: act.direction === "up" ? -400 : 400, behavior: "smooth" });
+            }
+            return { ok: true };
+          } catch (e: any) {
+            return { ok: false, reasonCode: e?.message || "Execution error" };
+          }
+        },
+        args: [action, vaultSecretValue],
+      });
+      execRes = scriptRes?.result || { ok: true };
+    } catch (directErr: any) {
+      execRes = { ok: false, reasonCode: directErr?.message || "Action dispatch failed" };
+    }
+  }
 
   activeRun.logs.push({
     stepNumber: activeRun.stepNumber,

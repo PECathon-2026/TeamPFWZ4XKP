@@ -2,6 +2,7 @@ import { DOMNode, Action, ElementFingerprint } from "@privacylens/protocol";
 
 // Allowlist of safe element tags
 const ALLOWED_TAGS = new Set([
+  "body", "main", "section", "article", "header", "footer", "nav",
   "a", "button", "input", "select", "textarea", "form",
   "label", "p", "span", "div", "h1", "h2", "h3", "h4",
   "h5", "h6", "table", "tr", "td", "th", "ul", "ol", "li", "code"
@@ -21,6 +22,9 @@ let currentSnapshotVersion = 0;
  * Traverses DOM and builds safe serialized tree adhering to allowlist.
  */
 function buildDOMSnapshot(element: HTMLElement, idCounter = { val: 0 }): DOMNode | null {
+  if (!element || !element.tagName) {
+    return null;
+  }
   const tagName = element.tagName.toLowerCase();
 
   // Filter out disallowed elements
@@ -29,9 +33,13 @@ function buildDOMSnapshot(element: HTMLElement, idCounter = { val: 0 }): DOMNode
   }
 
   // Filter hidden elements
-  const style = window.getComputedStyle(element);
-  if (style.display === "none" || style.visibility === "hidden") {
-    return null;
+  try {
+    const style = window.getComputedStyle(element);
+    if (style && (style.display === "none" || style.visibility === "hidden")) {
+      return null;
+    }
+  } catch {
+    // Non-fatal if getComputedStyle fails on detached element
   }
 
   const id = element.id ? element.id : `node_${idCounter.val++}`;
@@ -41,14 +49,16 @@ function buildDOMSnapshot(element: HTMLElement, idCounter = { val: 0 }): DOMNode
   }
 
   const attributes: Record<string, string> = {};
-  for (const attr of Array.from(element.attributes)) {
-    const attrName = attr.name.toLowerCase();
-    if (ALLOWED_ATTRIBUTES.has(attrName)) {
-      // NEVER read value of password input!
-      if (tagName === "input" && attrName === "value" && (element as HTMLInputElement).type === "password") {
-        continue;
+  if (element.attributes) {
+    for (const attr of Array.from(element.attributes)) {
+      const attrName = attr.name.toLowerCase();
+      if (ALLOWED_ATTRIBUTES.has(attrName)) {
+        // NEVER read value of password input!
+        if (tagName === "input" && attrName === "value" && (element as HTMLInputElement).type === "password") {
+          continue;
+        }
+        attributes[attrName] = attr.value;
       }
-      attributes[attrName] = attr.value;
     }
   }
 
@@ -73,7 +83,7 @@ function buildDOMSnapshot(element: HTMLElement, idCounter = { val: 0 }): DOMNode
       attributes["value"] = liveValue;
     }
     // Also capture the selected option's text
-    const selectedOption = (element as HTMLSelectElement).selectedOptions[0];
+    const selectedOption = (element as HTMLSelectElement).selectedOptions?.[0];
     if (selectedOption?.text) {
       attributes["title"] = selectedOption.text;
     }
@@ -90,8 +100,10 @@ function buildDOMSnapshot(element: HTMLElement, idCounter = { val: 0 }): DOMNode
     element.getAttribute("role") === "button";
 
   const children: DOMNode[] = [];
-  for (const child of Array.from(element.children)) {
-    if (child instanceof HTMLElement) {
+  const elChildren = element.children || [];
+  for (let i = 0; i < elChildren.length; i++) {
+    const child = elChildren[i];
+    if (child && child instanceof HTMLElement) {
       const childNode = buildDOMSnapshot(child, idCounter);
       if (childNode) {
         children.push(childNode);
@@ -101,8 +113,10 @@ function buildDOMSnapshot(element: HTMLElement, idCounter = { val: 0 }): DOMNode
 
   // Get direct text content
   let directText = "";
-  for (const node of Array.from(element.childNodes)) {
-    if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+  const childNodes = element.childNodes || [];
+  for (let i = 0; i < childNodes.length; i++) {
+    const node = childNodes[i];
+    if (node && node.nodeType === 3 && node.textContent) {
       directText += node.textContent.trim() + " ";
     }
   }
@@ -226,16 +240,25 @@ function renderPrivacyOverlay() {
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "SNAPSHOT") {
-    elementIdMap.clear();
-    currentSnapshotVersion = message.snapshotVersion;
-    const root = buildDOMSnapshot(document.body);
     try {
-      renderPrivacyOverlay();
-    } catch {
-      // Non-fatal if overlay fails to draw
+      elementIdMap.clear();
+      currentSnapshotVersion = message.snapshotVersion;
+      const target = document.body || document.documentElement;
+      if (!target) {
+        sendResponse({ ok: false, error: "Page content not ready" });
+        return;
+      }
+      const root = buildDOMSnapshot(target as HTMLElement);
+      try {
+        renderPrivacyOverlay();
+      } catch {
+        // Non-fatal if overlay fails to draw
+      }
+      sendResponse({ ok: true, rawTree: root });
+    } catch (err: any) {
+      sendResponse({ ok: false, error: err?.message || String(err) });
     }
-    sendResponse({ ok: true, rawTree: root });
-    return true;
+    return;
   }
 
   if (message.type === "EXECUTE") {
@@ -261,14 +284,49 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Execute Action
     try {
       if (action.type === "click" && targetElement) {
+        if (targetElement instanceof HTMLInputElement && (targetElement.type === "checkbox" || targetElement.type === "radio")) {
+          targetElement.checked = !targetElement.checked;
+          targetElement.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        targetElement.focus?.();
         targetElement.click();
-      } else if (action.type === "type" && targetElement instanceof HTMLInputElement) {
+      } else if (action.type === "type" && targetElement) {
         const textToFill = message.vaultSecretValue || action.value || "";
-        targetElement.value = textToFill;
-        targetElement.dispatchEvent(new Event("input", { bubbles: true }));
+        if (targetElement instanceof HTMLInputElement || targetElement instanceof HTMLTextAreaElement) {
+          targetElement.focus();
+          targetElement.value = textToFill;
+          targetElement.dispatchEvent(new Event("input", { bubbles: true }));
+          targetElement.dispatchEvent(new Event("change", { bubbles: true }));
+        } else if (targetElement.isContentEditable) {
+          targetElement.focus();
+          targetElement.innerText = textToFill;
+          targetElement.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      } else if (action.type === "select" && targetElement instanceof HTMLSelectElement) {
+        const val = action.value || "";
+        targetElement.focus();
+        let matched = false;
+        for (let i = 0; i < targetElement.options.length; i++) {
+          const opt = targetElement.options[i];
+          if (opt.value === val || opt.text.toLowerCase().includes(val.toLowerCase())) {
+            targetElement.selectedIndex = i;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched && targetElement.options.length > 0) {
+          targetElement.selectedIndex = 0;
+        }
         targetElement.dispatchEvent(new Event("change", { bubbles: true }));
       } else if (action.type === "scroll") {
-        window.scrollBy(0, action.direction === "up" ? -300 : 300);
+        window.scrollBy({
+          top: action.direction === "up" ? -400 : 400,
+          behavior: "smooth",
+        });
+      } else if (action.type === "navigate" && action.url) {
+        window.location.href = action.url;
+      } else if (action.type === "wait") {
+        await new Promise((r) => setTimeout(r, 600));
       }
 
       sendResponse({ ok: true });

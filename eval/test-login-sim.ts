@@ -29,7 +29,7 @@ async function runBrowserSimulation() {
   console.log("=== STEP 3: Content Script Injected & Visual Shield Activated ===");
   const snapshotResult = await page.evaluate(`(() => {
     let idCounter = 0;
-    const ALLOWED = new Set(["a", "button", "input", "select", "textarea", "form", "label", "p", "span", "div", "h1", "h2", "h3", "table", "tr", "td", "strong"]);
+    const ALLOWED = new Set(["body", "main", "section", "article", "header", "footer", "nav", "a", "button", "input", "select", "textarea", "form", "label", "p", "span", "div", "h1", "h2", "h3", "table", "tr", "td", "strong"]);
 
     const walk = (el) => {
       const tag = el.tagName.toLowerCase();
@@ -122,8 +122,9 @@ async function runBrowserSimulation() {
   console.log("Protected Raw Values Found & Stripped locally:", Array.from(rawValuesMap.keys()));
 
   console.log("=== STEP 5: Passing through Single Egress Gate ===");
+  const { EnvelopeSchema } = await import("@privacylens/protocol");
   const candidateEnvelope: Envelope = {
-    requestId: "11111111-2222-3333-4444-555555555555",
+    requestId: crypto.randomUUID(),
     task: "Verify 2FA OTP code and log in",
     snapshotVersion: 1,
     snapshot: sanitizedTree,
@@ -131,6 +132,15 @@ async function runBrowserSimulation() {
     redactionLedger: ledger,
     timestamp: Date.now(),
   };
+
+  const zodCheck = EnvelopeSchema.safeParse(candidateEnvelope);
+  if (!zodCheck.success) {
+    console.error("ZOD VALIDATION ERROR:", JSON.stringify(zodCheck.error.format(), null, 2));
+  }
+
+  const { detectAll } = await import("@privacylens/detector");
+  const rawFindings = detectAll(JSON.stringify(candidateEnvelope));
+  console.log("Tripwire Raw Findings:", rawFindings);
 
   const gateResult = await sendThroughGate(
     candidateEnvelope,
@@ -142,23 +152,68 @@ async function runBrowserSimulation() {
   );
 
   console.log("Egress Gate Verdict: Allowed =", gateResult.allowed);
+  console.log("Egress Gate Full Result:", JSON.stringify(gateResult, null, 2));
   console.log("Reasoner Action Proposed:", gateResult.response?.action);
 
-  console.log("=== STEP 6: Executing Model Action on the Live Page ===");
-  const action = gateResult.response?.action;
-  if (action?.type === "click" && action.targetId) {
-    await page.click(`#${action.targetId}`);
-  } else if (action?.type === "type" && action.targetId) {
-    await page.type(`#${action.targetId}`, action.value || "");
-  } else {
-    await page.click("#submit-btn");
+  console.log("=== STEP 6: Executing Step 1 Action (Typing OTP) ===");
+  const action1 = gateResult.response?.action;
+  if (action1?.type === "type" && action1.targetId) {
+    await page.focus(`#${action1.targetId}`);
+    await page.evaluate((id) => {
+      const el = document.getElementById(id) as HTMLInputElement;
+      if (el) el.value = "";
+    }, action1.targetId);
+    await page.type(`#${action1.targetId}`, action1.value || "829104", { delay: 40 });
   }
 
-  await new Promise((r) => setTimeout(r, 600));
+  await new Promise((r) => setTimeout(r, 400));
+  const typedShotPath = path.join(ARTIFACT_DIR, "sim-03-agent-typed.png");
+  await page.screenshot({ path: typedShotPath });
+  console.log("Captured Agent Typed Screenshot:", typedShotPath);
 
-  const afterActionPath = path.join(ARTIFACT_DIR, "sim-03-after-action.png");
-  await page.screenshot({ path: afterActionPath });
-  console.log("Captured after-action screenshot:", afterActionPath);
+  console.log("=== STEP 7: Step 2 Egress Gate & Submit Form ===");
+  const step2Envelope: Envelope = {
+    requestId: crypto.randomUUID(),
+    task: "Verify 2FA OTP code and log in",
+    snapshotVersion: 2,
+    snapshot: sanitizedTree,
+    availableSecrets: [],
+    redactionLedger: ledger,
+    timestamp: Date.now(),
+  };
+
+  const gateResult2 = await sendThroughGate(
+    step2Envelope,
+    Array.from(rawValuesMap.keys()),
+    {
+      gatewayUrl: "http://127.0.0.1:8787",
+      authToken: "",
+    }
+  );
+
+  console.log("Step 2 Egress Gate Allowed =", gateResult2.allowed);
+  console.log("Step 2 Reasoner Action Proposed:", gateResult2.response?.action);
+
+  const action2 = gateResult2.response?.action;
+  if (action2?.type === "click" && action2.targetId) {
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: "networkidle0" }).catch(() => {}),
+      page.click(`#${action2.targetId}`),
+    ]);
+  } else {
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: "networkidle0" }).catch(() => {}),
+      page.click("#submit-btn"),
+    ]);
+  }
+
+  await new Promise((r) => setTimeout(r, 800));
+  const completeShotPath = path.join(ARTIFACT_DIR, "sim-04-login-complete.png");
+  await page.screenshot({ path: completeShotPath });
+  console.log("Captured Login Complete Screenshot:", completeShotPath);
+
+  // Also maintain backward-compatible sim-03-after-action.png
+  fs.copyFileSync(completeShotPath, path.join(ARTIFACT_DIR, "sim-03-after-action.png"));
 
   await browser.close();
 
@@ -168,12 +223,15 @@ async function runBrowserSimulation() {
     url: "http://127.0.0.1:8787/auth",
     ledger,
     rawValuesMap: Object.fromEntries(rawValuesMap),
-    actionProposed: action,
+    action1Proposed: action1,
+    action2Proposed: action2,
     screenshots: {
       raw: rawShotPath,
       protected: protectedShotPath,
-      afterAction: afterActionPath,
+      typed: typedShotPath,
+      complete: completeShotPath,
     },
+    wirePayloadSanitizedSnapshot: candidateEnvelope.snapshot,
   };
 
   fs.writeFileSync(
